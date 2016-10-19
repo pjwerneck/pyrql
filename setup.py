@@ -3,7 +3,7 @@
 import os.path
 from setuptools import setup, find_packages
 
-version = '0.1.0'
+version = '0.1.1'
 
 requirements = []
 with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as fp:
