@@ -9,13 +9,21 @@ from sqlalchemy import or_, not_
 from .parser import parser, RQLSyntaxError
 
 from werkzeug.exceptions import BadRequest
+from urllib.parse import unquote
 
 
 class RQLQueryMixIn:
 
-    def rql(self, expr):
+    def rql(self, request):
+        expr = request.query_string
+
         if not expr:
             return self
+
+        if type(expr) is bytes:
+            expr = expr.decode(request.charset)
+
+        expr = unquote(expr)
 
         if len(self._entities) > 1:
             raise NotImplementedError("query must have a single entity for now")
