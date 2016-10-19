@@ -1,0 +1,17 @@
+*pyc
+*pyo
+*~
+*#
+.#*
+logs
+*.swp
+.env
+.venv
+.empty
+.idea
+.noseids
+docs/build/**
+.coverage
+cover/*
+.cache
+*.db
