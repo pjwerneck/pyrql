@@ -5,11 +5,15 @@ from functools import reduce
 
 from sqlalchemy import and_
 from sqlalchemy import or_, not_
-
+from sqlalchemy.inspection import inspect
+7
 from .parser import parser, RQLSyntaxError
+from .unparser import unparser
 
 from werkzeug.exceptions import BadRequest
 from urllib.parse import unquote
+
+from copy import deepcopy
 
 
 class RQLQueryMixIn:
@@ -18,18 +22,20 @@ class RQLQueryMixIn:
         expr = request.query_string
 
         if not expr:
+            self.rql_parsed = None
+            self.rql_expr = None
             return self
 
         if type(expr) is bytes:
             expr = expr.decode(request.charset)
 
-        expr = unquote(expr)
+        self.rql_expr = expr = unquote(expr)
 
         if len(self._entities) > 1:
             raise NotImplementedError("query must have a single entity for now")
 
         try:
-            root = parser.parse(expr)
+            self.rql_parsed = root = parser.parse(expr)
         except RQLSyntaxError as exc:
             raise BadRequest("RQL Syntax error: %s" % exc.args)
 
@@ -38,10 +44,14 @@ class RQLQueryMixIn:
         self._rql_order_by_clause = None
         self._rql_limit_clause = None
         self._rql_offset_clause = None
+        self._rql_joins = []
 
         self._rql_walk(root)
 
         query = self
+
+        for other in self._rql_joins:
+            query = query.join(other)
 
         if self._rql_where_clause is not None:
             query = query.filter(self._rql_where_clause)
@@ -56,6 +66,29 @@ class RQLQueryMixIn:
             query = query.order_by(*self._rql_order_by_clause)
 
         return query
+
+    def rql_expr_replace(self, replacement):
+        parsed = deepcopy(self.rql_parsed)
+
+        replaced = self._rql_traverse_and_replace(parsed, replacement['name'], replacement['args'])
+
+        if not replaced:
+            parsed = {'name': 'and', 'args': [replacement, parsed]}
+
+        return unparser.unparse(parsed)
+
+    def _rql_traverse_and_replace(self, root, name, args):
+        if root['name'] == name:
+            root['args'] = args
+            return True
+
+        else:
+            for arg in root['args']:
+                if isinstance(arg, dict):
+                    if self._rql_traverse_and_replace(arg, name, args):
+                        return True
+
+        return False
 
     def _rql_walk(self, node):
         self._rql_where_clause = self._rql_apply(node)
@@ -85,14 +118,26 @@ class RQLQueryMixIn:
         return node
 
     def _rql_attr(self, attr):
+        model = self._entities[0].type
         if isinstance(attr, str):
-            model = self._entities[0].type
             try:
-                column = getattr(model, attr)
-            except AttributeError as exc:
+                return getattr(model, attr)
+            except AttributeError:
                 raise BadRequest("Invalid query attribute: %s" % attr)
 
-        return column
+        elif isinstance(attr, tuple) and len(attr) == 2:
+            relationships = inspect(model).relationships.keys()
+
+            if attr[0] in relationships:
+                rel = getattr(model, attr[0])
+                submodel = rel.mapper.class_
+
+                column = getattr(submodel, attr[1])
+                self._rql_joins.append(rel)
+
+                return column
+
+        raise NotImplementedError
 
     def _rql_value(self, value):
         return value
