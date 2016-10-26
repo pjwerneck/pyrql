@@ -32,10 +32,10 @@ RESERVED = {
     # 'recurse': 'RECURSE',
     # 'rel': 'REL',
     # 'select': 'SELECT',
-    #'sort': 'SORT',
+    'sort': 'SORT',
     # 'sum': 'SUM',
     # 'values': 'VALUES'
-}
+    }
 
 tokens = (
     'NAME',
@@ -43,16 +43,17 @@ tokens = (
     'RPAREN',
     'ICONST',
     'FCONST',
-    'SCONST',
+    # 'SCONST',
 
     # delimiters
-    'DOT',
+    # 'DOT',
     'COMMA',
 
     # operators
     'PLUS',
     'MINUS',
-    'DIV',
+
+    # 'DIV',
     'EQUALS',
     'AND',
     'OR',
@@ -60,14 +61,19 @@ tokens = (
     ) + tuple(RESERVED.values())
 
 
-t_DOT = r'\.'
+precedence = (
+    ('left', 'OR'),
+    ('left', 'AND'),
+    )
+
+# t_DOT = r'\.'
 t_COMMA = r','
 
 
 # operators
 t_PLUS = r'\+'
 t_MINUS = r'-'
-t_DIV = r'/'
+# t_DIV = r'/'
 t_EQUALS = r'='
 t_AND = r'&'
 t_OR = r'\|'
@@ -145,28 +151,28 @@ def p_calls(t):
 
 def p_op_eq(t):
     """
-    call : NAME EQUALS test
+    call : NAME EQUALS const
     """
     t[0] = {'name': 'eq', 'args': [t[1], t[3]]}
 
 
 def p_fiql_ops(t):
     """
-    call : NAME EQUALS NAME EQUALS test
+    call : NAME EQUALS NAME EQUALS const
     """
     t[0] = {'name': t[3], 'args': [t[1], t[5]]}
 
 
 def p_op_and(t):
     """
-    call : parg AND parg
+    call : arg AND arg
     """
     t[0] = {'name': 'and', 'args': [t[1], t[3]]}
 
 
 def p_op_or(t):
     """
-    call : parg OR parg
+    call : arg OR arg
     """
     t[0] = {'name': 'or', 'args': [t[1], t[3]]}
 
@@ -180,6 +186,14 @@ def p_generic_call(t):
         t[0] = {'name': t[1], 'args': []}
     else:
         t[0] = {'name': t[1], 'args': t[3]}
+
+
+def p_sort_call(t):
+    """
+    call : SORT LPAREN sort_arglist RPAREN
+
+    """
+    t[0] = {'name': 'sort', 'args': t[3]}
 
 
 def p_argarray(t):
@@ -199,8 +213,8 @@ def p_paren_arg(t):
 
 def p_arglist(t):
     """
-    arglist : parg COMMA arglist
-            | parg
+    arglist : arg COMMA arglist
+            | arg
     """
     if len(t) == 2:
         t[0] = [t[1]]
@@ -208,11 +222,21 @@ def p_arglist(t):
         t[0] = [t[1]] + t[3]
 
 
-def p_prefixed_arg(t):
+def p_sort_arglist(t):
     """
-    parg : PLUS arg
-         | MINUS arg
-         | arg
+    sort_arglist : sort_arg COMMA sort_arglist
+                 | sort_arg
+    """
+    if len(t) == 2:
+        t[0] = [t[1]]
+    else:
+        t[0] = [t[1]] + t[3]
+
+
+def p_sort_arg(t):
+    """
+    sort_arg : sort_prefix arg
+             | arg
     """
     if len(t) == 2:
         t[0] = t[1]
@@ -221,20 +245,20 @@ def p_prefixed_arg(t):
         t[0] = (t[1], t[2])
 
 
-def p_arg(t):
+def p_sort_prefix(t):
     """
-    arg : test
-        | call
+    sort_prefix : PLUS
+                | MINUS
     """
-
     t[0] = t[1]
 
 
-def p_test_const(t):
+def p_arg(t):
     """
-    test : const
+    arg : const
+        | call
+    """
 
-    """
     t[0] = t[1]
 
 

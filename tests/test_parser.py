@@ -1,23 +1,32 @@
 # -*- coding: utf-8 -*-
 
 from pyrql.parser import parser
+from pyrql.unparser import unparser
 
 import pytest
 
 
 @pytest.mark.parametrize('func', ['eq', 'lt', 'le', 'gt', 'ge', 'ne'])
 def test_cmp_functions(func):
-    parsed = parser.parse('%s(a, 1)' % func)
-    assert parsed == {'name': func, 'args': ['a', 1]}
+    expr = '%s(a,1)' % func
+    parsed = {'name': func, 'args': ['a', 1]}
 
-    parsed = parser.parse('%s((a,b,c), 1)' % func)
-    assert parsed == {'name': func, 'args': [('a', 'b', 'c'), 1]}
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
+
+    expr = '%s((a,b,c),1)' % func
+    parsed = {'name': func, 'args': [('a', 'b', 'c'), 1]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 @pytest.mark.parametrize('func', ['eq', 'lt', 'le', 'gt', 'ge', 'ne'])
 def test_cmp_ops_functions(func):
-    parsed = parser.parse('a=%s=1' % func)
-    assert parsed == {'name': func, 'args': ['a', 1]}
+    expr = 'a=%s=1' % func
+    parsed = {'name': func, 'args': ['a', 1]}
+
+    assert parser.parse(expr) == parsed
 
     parsed = parser.parse('%s((a,b,c), 1)' % func)
     assert parsed == {'name': func, 'args': [('a', 'b', 'c'), 1]}
@@ -28,7 +37,6 @@ def test_equality_operator():
     p2 = parser.parse('eq(lero, 0)')
 
     assert p1 == p2
-
 
 def test_and_operator():
     p1 = parser.parse('eq(a,0)&eq(b,1)')
@@ -44,8 +52,11 @@ def test_or_operator():
 
 @pytest.mark.parametrize('func', ['in', 'out', 'contains', 'excludes'])
 def test_member_functions(func):
-    parsed = parser.parse('%s(name, (a,b))' % func)
-    assert parsed == {'name': func, 'args': ['name', ('a', 'b')]}
+    expr = '%s(name,(a,b))' % func
+    parsed = {'name': func, 'args': ['name', ('a', 'b')]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 @pytest.mark.skip()
@@ -56,50 +67,80 @@ def test_rel_function():
 
 @pytest.mark.parametrize('func', ['and', 'or'])
 def test_bool_functions(func):
-    parsed = parser.parse('%s(a, b)' % func)
-    assert parsed == {'name': func, 'args': ['a', 'b']}
+    expr = '%s(a,b)' % func
+    parsed = {'name': func, 'args': ['a', 'b']}
 
-    parsed = parser.parse('%s(a, b, c)' % func)
-    assert parsed == {'name': func, 'args': ['a', 'b', 'c']}
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed, level=1) == expr
+
+    expr = '%s(a,b,c)' % func
+    parsed = {'name': func, 'args': ['a', 'b', 'c']}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed, level=1) == expr
 
 
 def test_sort_function():
-    parsed = parser.parse('sort(+lero)')
-    assert parsed == {'name': 'sort', 'args': [('+', 'lero')]}
+    expr = 'sort(+lero)'
+    parsed = {'name': 'sort', 'args': [('+', 'lero')]}
 
-    parsed = parser.parse('sort(+foo, -bar)')
-    assert parsed == {'name': 'sort', 'args': [('+', 'foo'), ('-', 'bar')]}
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
-    parsed = parser.parse('sort(+(foo,bar), -lero)')
-    assert parsed == {'name': 'sort', 'args': [('+', ('foo', 'bar')), ('-', 'lero')]}
+    expr = 'sort(+foo,-bar)'
+    parsed = {'name': 'sort', 'args': [('+', 'foo'), ('-', 'bar')]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
+
+    expr = 'sort(+(foo,bar),-lero)'
+    parsed = {'name': 'sort', 'args': [('+', ('foo', 'bar')), ('-', 'lero')]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 @pytest.mark.parametrize('func', ['select', 'values'])
 def test_query_functions(func):
-    parsed = parser.parse('%s(username, password, (address, city))' % func)
-    assert parsed == {'name': func, 'args': ['username', 'password', ('address', 'city')]}
+    expr = '%s(username,password,(address,city))' % func
+    parsed = {'name': func, 'args': ['username', 'password', ('address', 'city')]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 @pytest.mark.parametrize('func', ['sum', 'mean', 'max', 'min', 'count'])
 def test_aggregate_functions(func):
-    parsed = parser.parse('%s((a, b, c))' % func)
-    assert parsed == {'name': func, 'args': [('a', 'b', 'c')]}
+    expr = '%s((a,b,c))' % func
+    parsed = {'name': func, 'args': [('a', 'b', 'c')]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 @pytest.mark.parametrize('func', ['distinct', 'first', 'one'])
 def test_result_functions(func):
-    parsed = parser.parse('%s()' % func)
-    assert parsed == {'name': func, 'args': []}
+    expr = '%s()' % func
+    parsed = {'name': func, 'args': []}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 def test_limit_function():
-    parsed = parser.parse('limit(10, 0)')
-    assert parsed == {'name': 'limit', 'args': [10, 0]}
+    expr = 'limit(10,0)'
+    parsed = {'name': 'limit', 'args': [10, 0]}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 def test_recurse_function():
-    parsed = parser.parse('recurse(lero)')
-    assert parsed == {'name': 'recurse', 'args': ['lero']}
+    expr = 'recurse(lero)'
+    parsed = {'name': 'recurse', 'args': ['lero']}
+
+    assert parser.parse(expr) == parsed
+    assert unparser.unparse(parsed) == expr
 
 
 @pytest.mark.parametrize('expr', ['foo=3&price=lt=10',
