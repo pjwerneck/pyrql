@@ -105,7 +105,6 @@ class RQLQueryMixIn:
                 method = getattr(self, '_rql_' + name)
             except AttributeError:
                 raise BadRequest("Invalid query function: %s" % name)
-                raise NotImplementedError(name)
 
             return method(args)
 
@@ -153,16 +152,14 @@ class RQLQueryMixIn:
     def _rql_and(self, args):
         args = [self._rql_apply(node) for node in args]
         args = [a for a in args if a is not None]
-        expr = reduce(and_, args)
-
-        return expr
+        if args:
+            return reduce(and_, args)
 
     def _rql_or(self, args):
         args = [self._rql_apply(node) for node in args]
         args = [a for a in args if a is not None]
-        expr = reduce(or_, args)
-
-        return expr
+        if args:
+            return reduce(or_, args)
 
     def _rql_in(self, args):
         attr, value = args
