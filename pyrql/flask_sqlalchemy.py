@@ -56,14 +56,15 @@ class RQLQueryMixIn:
         if self._rql_where_clause is not None:
             query = query.filter(self._rql_where_clause)
 
+        if self._rql_order_by_clause is not None:
+            query = query.order_by(*self._rql_order_by_clause)
+
         if self._rql_limit_clause is not None:
             query = query.limit(self._rql_limit_clause)
 
         if self._rql_offset_clause is not None:
             query = query.offset(self._rql_offset_clause)
 
-        if self._rql_order_by_clause is not None:
-            query = query.order_by(*self._rql_order_by_clause)
 
         return query
 
