@@ -65,7 +65,6 @@ class RQLQueryMixIn:
         if self._rql_offset_clause is not None:
             query = query.offset(self._rql_offset_clause)
 
-
         return query
 
     def rql_expr_replace(self, replacement):
@@ -204,3 +203,10 @@ class RQLQueryMixIn:
         attrs = [attr.desc() if p == '-' else attr for (p, attr) in args]
 
         self._rql_order_by_clause = attrs
+
+    def _rql_contains(self, args):
+        attr, value = args
+        attr = self._rql_attr(attr)
+        value = self._rql_value(value)
+
+        return attr.contains(value)
