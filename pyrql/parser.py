@@ -82,7 +82,7 @@ t_ignore = ' \t'
 
 
 def t_NAME(t):
-    r'[a-zA-Z_\*][a-zA-Z0-9 _\*]*'
+    r'[a-zA-Z_\*][a-zA-Z0-9 _\*:]*'
     t.type = RESERVED.get(t.value, "NAME")
     return t
 

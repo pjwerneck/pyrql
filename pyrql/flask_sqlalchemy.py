@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import operator
 from functools import reduce
 
 from sqlalchemy import and_
 from sqlalchemy import or_, not_
 from sqlalchemy.inspection import inspect
-7
+
 from .parser import parser, RQLSyntaxError
 from .unparser import unparser
 
@@ -138,14 +139,17 @@ class RQLQueryMixIn:
 
         raise NotImplementedError
 
-    def _rql_value(self, value):
+    def _rql_value(self, value, attr=None):
+        if isinstance(value, dict):
+            value = self._rql_apply(value)
+
         return value
 
     def _rql_cmp(self, args, op):
         attr, value = args
 
         attr = self._rql_attr(attr)
-        value = self._rql_value(value)
+        value = self._rql_value(value, attr)
 
         return op(attr, value)
 
@@ -165,7 +169,7 @@ class RQLQueryMixIn:
         attr, value = args
 
         attr = self._rql_attr(attr)
-        value = self._rql_value(value)
+        value = self._rql_value(value, attr)
 
         return attr.in_(value)
 
@@ -173,7 +177,7 @@ class RQLQueryMixIn:
         attr, value = args
 
         attr = self._rql_attr(attr)
-        value = self._rql_value(value)
+        value = self._rql_value(value, attr)
 
         return not_(attr.in_(value))
 
@@ -181,7 +185,7 @@ class RQLQueryMixIn:
         attr, value = args
 
         attr = self._rql_attr(attr)
-        value = self._rql_value(value)
+        value = self._rql_value(value, attr)
         value = value.replace('*', '%')
 
         return attr.like(value)
@@ -207,6 +211,9 @@ class RQLQueryMixIn:
     def _rql_contains(self, args):
         attr, value = args
         attr = self._rql_attr(attr)
-        value = self._rql_value(value)
+        value = self._rql_value(value, attr)
 
         return attr.contains(value)
+
+    def _rql_time(self, args):
+        return datetime.time(*args)
