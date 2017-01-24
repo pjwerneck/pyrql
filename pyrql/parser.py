@@ -35,6 +35,9 @@ RESERVED = {
     'sort': 'SORT',
     # 'sum': 'SUM',
     # 'values': 'VALUES'
+    'true': 'BOOL_TRUE',
+    'false': 'BOOL_FALSE',
+    'null': 'NULL',
     }
 
 tokens = (
@@ -79,6 +82,10 @@ t_AND = r'&'
 t_OR = r'\|'
 
 t_ignore = ' \t'
+
+t_BOOL_TRUE = r'true'
+t_BOOL_FALSE = r'false'
+t_NULL = r'null'
 
 
 def t_NAME(t):
@@ -260,6 +267,30 @@ def p_arg(t):
     """
 
     t[0] = t[1]
+
+
+def p_true(t):
+    """
+    const : BOOL_TRUE
+
+    """
+    t[0] = True
+
+
+def p_false(t):
+    """
+    const : BOOL_FALSE
+
+    """
+    t[0] = False
+
+
+def p_null(t):
+    """
+    const : NULL
+
+    """
+    t[0] = None
 
 
 def p_const(t):

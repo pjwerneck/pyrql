@@ -80,30 +80,44 @@ state 0
     (24) const -> . ICONST
     (25) const -> . FCONST
 
-    NAME            shift and go to state 3
-    SORT            shift and go to state 9
-    LPAREN          shift and go to state 2
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
+    NAME            shift and go to state 1
+    SORT            shift and go to state 4
+    LPAREN          shift and go to state 3
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
 
-    calls                          shift and go to state 6
-    toplevel                       shift and go to state 7
-    const                          shift and go to state 1
-    call                           shift and go to state 5
-    arg                            shift and go to state 10
+    toplevel                       shift and go to state 8
+    call                           shift and go to state 6
+    arg                            shift and go to state 9
+    calls                          shift and go to state 7
+    const                          shift and go to state 10
 
 state 1
 
-    (21) arg -> const .
+    (4) call -> NAME . EQUALS const
+    (5) call -> NAME . EQUALS NAME EQUALS const
+    (8) call -> NAME . LPAREN arglist RPAREN
+    (9) call -> NAME . LPAREN RPAREN
+    (23) const -> NAME .
 
-    AND             reduce using rule 21 (arg -> const .)
-    OR              reduce using rule 21 (arg -> const .)
-    COMMA           reduce using rule 21 (arg -> const .)
-    $end            reduce using rule 21 (arg -> const .)
-    RPAREN          reduce using rule 21 (arg -> const .)
+    EQUALS          shift and go to state 12
+    LPAREN          shift and go to state 11
+    AND             reduce using rule 23 (const -> NAME .)
+    OR              reduce using rule 23 (const -> NAME .)
 
 
 state 2
+
+    (25) const -> FCONST .
+
+    AND             reduce using rule 25 (const -> FCONST .)
+    OR              reduce using rule 25 (const -> FCONST .)
+    COMMA           reduce using rule 25 (const -> FCONST .)
+    $end            reduce using rule 25 (const -> FCONST .)
+    RPAREN          reduce using rule 25 (const -> FCONST .)
+
+
+state 3
 
     (11) arg -> LPAREN . arglist RPAREN
     (12) arg -> LPAREN . arg RPAREN
@@ -124,147 +138,81 @@ state 2
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    const                          shift and go to state 1
-    call                           shift and go to state 12
-    arglist                        shift and go to state 13
-    arg                            shift and go to state 14
-
-state 3
-
-    (4) call -> NAME . EQUALS const
-    (5) call -> NAME . EQUALS NAME EQUALS const
-    (8) call -> NAME . LPAREN arglist RPAREN
-    (9) call -> NAME . LPAREN RPAREN
-    (23) const -> NAME .
-
-    EQUALS          shift and go to state 16
-    LPAREN          shift and go to state 15
-    AND             reduce using rule 23 (const -> NAME .)
-    OR              reduce using rule 23 (const -> NAME .)
-
+    arg                            shift and go to state 16
+    call                           shift and go to state 14
+    arglist                        shift and go to state 15
+    const                          shift and go to state 10
 
 state 4
 
-    (25) const -> FCONST .
+    (10) call -> SORT . LPAREN sort_arglist RPAREN
 
-    AND             reduce using rule 25 (const -> FCONST .)
-    OR              reduce using rule 25 (const -> FCONST .)
-    COMMA           reduce using rule 25 (const -> FCONST .)
-    RPAREN          reduce using rule 25 (const -> FCONST .)
-    $end            reduce using rule 25 (const -> FCONST .)
+    LPAREN          shift and go to state 17
 
 
 state 5
-
-    (2) calls -> call . COMMA calls
-    (3) calls -> call .
-    (22) arg -> call .
-
-    COMMA           shift and go to state 17
-    $end            reduce using rule 3 (calls -> call .)
-    AND             reduce using rule 22 (arg -> call .)
-    OR              reduce using rule 22 (arg -> call .)
-
-
-state 6
-
-    (1) toplevel -> calls .
-
-    $end            reduce using rule 1 (toplevel -> calls .)
-
-
-state 7
-
-    (0) S' -> toplevel .
-
-
-
-state 8
 
     (24) const -> ICONST .
 
     AND             reduce using rule 24 (const -> ICONST .)
     OR              reduce using rule 24 (const -> ICONST .)
     COMMA           reduce using rule 24 (const -> ICONST .)
-    RPAREN          reduce using rule 24 (const -> ICONST .)
     $end            reduce using rule 24 (const -> ICONST .)
+    RPAREN          reduce using rule 24 (const -> ICONST .)
+
+
+state 6
+
+    (2) calls -> call . COMMA calls
+    (3) calls -> call .
+    (22) arg -> call .
+
+    COMMA           shift and go to state 18
+    $end            reduce using rule 3 (calls -> call .)
+    AND             reduce using rule 22 (arg -> call .)
+    OR              reduce using rule 22 (arg -> call .)
+
+
+state 7
+
+    (1) toplevel -> calls .
+
+    $end            reduce using rule 1 (toplevel -> calls .)
+
+
+state 8
+
+    (0) S' -> toplevel .
+
 
 
 state 9
 
-    (10) call -> SORT . LPAREN sort_arglist RPAREN
+    (6) call -> arg . AND arg
+    (7) call -> arg . OR arg
 
-    LPAREN          shift and go to state 18
+    AND             shift and go to state 20
+    OR              shift and go to state 19
 
 
 state 10
 
-    (6) call -> arg . AND arg
-    (7) call -> arg . OR arg
+    (21) arg -> const .
 
-    AND             shift and go to state 19
-    OR              shift and go to state 20
+    AND             reduce using rule 21 (arg -> const .)
+    OR              reduce using rule 21 (arg -> const .)
+    COMMA           reduce using rule 21 (arg -> const .)
+    $end            reduce using rule 21 (arg -> const .)
+    RPAREN          reduce using rule 21 (arg -> const .)
 
 
 state 11
-
-    (23) const -> NAME .
-    (4) call -> NAME . EQUALS const
-    (5) call -> NAME . EQUALS NAME EQUALS const
-    (8) call -> NAME . LPAREN arglist RPAREN
-    (9) call -> NAME . LPAREN RPAREN
-
-    AND             reduce using rule 23 (const -> NAME .)
-    OR              reduce using rule 23 (const -> NAME .)
-    COMMA           reduce using rule 23 (const -> NAME .)
-    RPAREN          reduce using rule 23 (const -> NAME .)
-    $end            reduce using rule 23 (const -> NAME .)
-    EQUALS          shift and go to state 16
-    LPAREN          shift and go to state 15
-
-
-state 12
-
-    (22) arg -> call .
-
-    AND             reduce using rule 22 (arg -> call .)
-    OR              reduce using rule 22 (arg -> call .)
-    COMMA           reduce using rule 22 (arg -> call .)
-    $end            reduce using rule 22 (arg -> call .)
-    RPAREN          reduce using rule 22 (arg -> call .)
-
-
-state 13
-
-    (11) arg -> LPAREN arglist . RPAREN
-
-    RPAREN          shift and go to state 21
-
-
-state 14
-
-    (12) arg -> LPAREN arg . RPAREN
-    (13) arglist -> arg . COMMA arglist
-    (14) arglist -> arg .
-    (6) call -> arg . AND arg
-    (7) call -> arg . OR arg
-
-  ! shift/reduce conflict for RPAREN resolved as shift
-    RPAREN          shift and go to state 23
-    COMMA           shift and go to state 22
-    AND             shift and go to state 19
-    OR              shift and go to state 20
-
-  ! RPAREN          [ reduce using rule 14 (arglist -> arg .) ]
-
-
-state 15
 
     (8) call -> NAME LPAREN . arglist RPAREN
     (9) call -> NAME LPAREN . RPAREN
@@ -285,19 +233,19 @@ state 15
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    RPAREN          shift and go to state 24
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    RPAREN          shift and go to state 23
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    const                          shift and go to state 1
-    call                           shift and go to state 12
-    arglist                        shift and go to state 25
-    arg                            shift and go to state 26
+    arg                            shift and go to state 22
+    call                           shift and go to state 14
+    arglist                        shift and go to state 21
+    const                          shift and go to state 10
 
-state 16
+state 12
 
     (4) call -> NAME EQUALS . const
     (5) call -> NAME EQUALS . NAME EQUALS const
@@ -305,44 +253,65 @@ state 16
     (24) const -> . ICONST
     (25) const -> . FCONST
 
-    NAME            shift and go to state 27
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
+    NAME            shift and go to state 24
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
 
-    const                          shift and go to state 28
+    const                          shift and go to state 25
+
+state 13
+
+    (23) const -> NAME .
+    (4) call -> NAME . EQUALS const
+    (5) call -> NAME . EQUALS NAME EQUALS const
+    (8) call -> NAME . LPAREN arglist RPAREN
+    (9) call -> NAME . LPAREN RPAREN
+
+    AND             reduce using rule 23 (const -> NAME .)
+    OR              reduce using rule 23 (const -> NAME .)
+    COMMA           reduce using rule 23 (const -> NAME .)
+    $end            reduce using rule 23 (const -> NAME .)
+    RPAREN          reduce using rule 23 (const -> NAME .)
+    EQUALS          shift and go to state 12
+    LPAREN          shift and go to state 11
+
+
+state 14
+
+    (22) arg -> call .
+
+    AND             reduce using rule 22 (arg -> call .)
+    OR              reduce using rule 22 (arg -> call .)
+    COMMA           reduce using rule 22 (arg -> call .)
+    $end            reduce using rule 22 (arg -> call .)
+    RPAREN          reduce using rule 22 (arg -> call .)
+
+
+state 15
+
+    (11) arg -> LPAREN arglist . RPAREN
+
+    RPAREN          shift and go to state 26
+
+
+state 16
+
+    (12) arg -> LPAREN arg . RPAREN
+    (13) arglist -> arg . COMMA arglist
+    (14) arglist -> arg .
+    (6) call -> arg . AND arg
+    (7) call -> arg . OR arg
+
+  ! shift/reduce conflict for RPAREN resolved as shift
+    RPAREN          shift and go to state 28
+    COMMA           shift and go to state 27
+    AND             shift and go to state 20
+    OR              shift and go to state 19
+
+  ! RPAREN          [ reduce using rule 14 (arglist -> arg .) ]
+
 
 state 17
-
-    (2) calls -> call COMMA . calls
-    (2) calls -> . call COMMA calls
-    (3) calls -> . call
-    (4) call -> . NAME EQUALS const
-    (5) call -> . NAME EQUALS NAME EQUALS const
-    (6) call -> . arg AND arg
-    (7) call -> . arg OR arg
-    (8) call -> . NAME LPAREN arglist RPAREN
-    (9) call -> . NAME LPAREN RPAREN
-    (10) call -> . SORT LPAREN sort_arglist RPAREN
-    (11) arg -> . LPAREN arglist RPAREN
-    (12) arg -> . LPAREN arg RPAREN
-    (21) arg -> . const
-    (22) arg -> . call
-    (23) const -> . NAME
-    (24) const -> . ICONST
-    (25) const -> . FCONST
-
-    NAME            shift and go to state 3
-    SORT            shift and go to state 9
-    LPAREN          shift and go to state 2
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-
-    calls                          shift and go to state 29
-    const                          shift and go to state 1
-    call                           shift and go to state 5
-    arg                            shift and go to state 10
-
-state 18
 
     (10) call -> SORT LPAREN . sort_arglist RPAREN
     (15) sort_arglist -> . sort_arg COMMA sort_arglist
@@ -366,31 +335,26 @@ state 18
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    PLUS            shift and go to state 33
-    MINUS           shift and go to state 30
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    PLUS            shift and go to state 34
+    MINUS           shift and go to state 33
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    sort_arglist                   shift and go to state 32
-    call                           shift and go to state 12
+    sort_arg                       shift and go to state 30
     sort_prefix                    shift and go to state 31
-    sort_arg                       shift and go to state 34
-    const                          shift and go to state 1
-    arg                            shift and go to state 35
+    call                           shift and go to state 14
+    arg                            shift and go to state 32
+    const                          shift and go to state 10
+    sort_arglist                   shift and go to state 29
 
-state 19
+state 18
 
-    (6) call -> arg AND . arg
-    (11) arg -> . LPAREN arglist RPAREN
-    (12) arg -> . LPAREN arg RPAREN
-    (21) arg -> . const
-    (22) arg -> . call
-    (23) const -> . NAME
-    (24) const -> . ICONST
-    (25) const -> . FCONST
+    (2) calls -> call COMMA . calls
+    (2) calls -> . call COMMA calls
+    (3) calls -> . call
     (4) call -> . NAME EQUALS const
     (5) call -> . NAME EQUALS NAME EQUALS const
     (6) call -> . arg AND arg
@@ -398,18 +362,26 @@ state 19
     (8) call -> . NAME LPAREN arglist RPAREN
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
+    (11) arg -> . LPAREN arglist RPAREN
+    (12) arg -> . LPAREN arg RPAREN
+    (21) arg -> . const
+    (22) arg -> . call
+    (23) const -> . NAME
+    (24) const -> . ICONST
+    (25) const -> . FCONST
 
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    NAME            shift and go to state 1
+    SORT            shift and go to state 4
+    LPAREN          shift and go to state 3
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
 
-    const                          shift and go to state 1
-    call                           shift and go to state 12
-    arg                            shift and go to state 36
+    call                           shift and go to state 6
+    arg                            shift and go to state 9
+    const                          shift and go to state 10
+    calls                          shift and go to state 35
 
-state 20
+state 19
 
     (7) call -> arg OR . arg
     (11) arg -> . LPAREN arglist RPAREN
@@ -427,17 +399,100 @@ state 20
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    const                          shift and go to state 1
-    call                           shift and go to state 12
+    arg                            shift and go to state 36
+    call                           shift and go to state 14
+    const                          shift and go to state 10
+
+state 20
+
+    (6) call -> arg AND . arg
+    (11) arg -> . LPAREN arglist RPAREN
+    (12) arg -> . LPAREN arg RPAREN
+    (21) arg -> . const
+    (22) arg -> . call
+    (23) const -> . NAME
+    (24) const -> . ICONST
+    (25) const -> . FCONST
+    (4) call -> . NAME EQUALS const
+    (5) call -> . NAME EQUALS NAME EQUALS const
+    (6) call -> . arg AND arg
+    (7) call -> . arg OR arg
+    (8) call -> . NAME LPAREN arglist RPAREN
+    (9) call -> . NAME LPAREN RPAREN
+    (10) call -> . SORT LPAREN sort_arglist RPAREN
+
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
+
     arg                            shift and go to state 37
+    call                           shift and go to state 14
+    const                          shift and go to state 10
 
 state 21
+
+    (8) call -> NAME LPAREN arglist . RPAREN
+
+    RPAREN          shift and go to state 38
+
+
+state 22
+
+    (13) arglist -> arg . COMMA arglist
+    (14) arglist -> arg .
+    (6) call -> arg . AND arg
+    (7) call -> arg . OR arg
+
+    COMMA           shift and go to state 27
+    RPAREN          reduce using rule 14 (arglist -> arg .)
+    AND             shift and go to state 20
+    OR              shift and go to state 19
+
+
+state 23
+
+    (9) call -> NAME LPAREN RPAREN .
+
+    COMMA           reduce using rule 9 (call -> NAME LPAREN RPAREN .)
+    AND             reduce using rule 9 (call -> NAME LPAREN RPAREN .)
+    OR              reduce using rule 9 (call -> NAME LPAREN RPAREN .)
+    RPAREN          reduce using rule 9 (call -> NAME LPAREN RPAREN .)
+    $end            reduce using rule 9 (call -> NAME LPAREN RPAREN .)
+
+
+state 24
+
+    (5) call -> NAME EQUALS NAME . EQUALS const
+    (23) const -> NAME .
+
+    EQUALS          shift and go to state 39
+    COMMA           reduce using rule 23 (const -> NAME .)
+    $end            reduce using rule 23 (const -> NAME .)
+    AND             reduce using rule 23 (const -> NAME .)
+    OR              reduce using rule 23 (const -> NAME .)
+    RPAREN          reduce using rule 23 (const -> NAME .)
+
+
+state 25
+
+    (4) call -> NAME EQUALS const .
+
+    COMMA           reduce using rule 4 (call -> NAME EQUALS const .)
+    AND             reduce using rule 4 (call -> NAME EQUALS const .)
+    OR              reduce using rule 4 (call -> NAME EQUALS const .)
+    RPAREN          reduce using rule 4 (call -> NAME EQUALS const .)
+    $end            reduce using rule 4 (call -> NAME EQUALS const .)
+
+
+state 26
 
     (11) arg -> LPAREN arglist RPAREN .
 
@@ -448,7 +503,7 @@ state 21
     RPAREN          reduce using rule 11 (arg -> LPAREN arglist RPAREN .)
 
 
-state 22
+state 27
 
     (13) arglist -> arg COMMA . arglist
     (13) arglist -> . arg COMMA arglist
@@ -468,18 +523,18 @@ state 22
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    const                          shift and go to state 1
-    call                           shift and go to state 12
-    arglist                        shift and go to state 38
-    arg                            shift and go to state 26
+    arg                            shift and go to state 22
+    call                           shift and go to state 14
+    arglist                        shift and go to state 40
+    const                          shift and go to state 10
 
-state 23
+state 28
 
     (12) arg -> LPAREN arg RPAREN .
 
@@ -490,77 +545,20 @@ state 23
     RPAREN          reduce using rule 12 (arg -> LPAREN arg RPAREN .)
 
 
-state 24
-
-    (9) call -> NAME LPAREN RPAREN .
-
-    COMMA           reduce using rule 9 (call -> NAME LPAREN RPAREN .)
-    AND             reduce using rule 9 (call -> NAME LPAREN RPAREN .)
-    OR              reduce using rule 9 (call -> NAME LPAREN RPAREN .)
-    RPAREN          reduce using rule 9 (call -> NAME LPAREN RPAREN .)
-    $end            reduce using rule 9 (call -> NAME LPAREN RPAREN .)
-
-
-state 25
-
-    (8) call -> NAME LPAREN arglist . RPAREN
-
-    RPAREN          shift and go to state 39
-
-
-state 26
-
-    (13) arglist -> arg . COMMA arglist
-    (14) arglist -> arg .
-    (6) call -> arg . AND arg
-    (7) call -> arg . OR arg
-
-    COMMA           shift and go to state 22
-    RPAREN          reduce using rule 14 (arglist -> arg .)
-    AND             shift and go to state 19
-    OR              shift and go to state 20
-
-
-state 27
-
-    (5) call -> NAME EQUALS NAME . EQUALS const
-    (23) const -> NAME .
-
-    EQUALS          shift and go to state 40
-    COMMA           reduce using rule 23 (const -> NAME .)
-    $end            reduce using rule 23 (const -> NAME .)
-    AND             reduce using rule 23 (const -> NAME .)
-    OR              reduce using rule 23 (const -> NAME .)
-    RPAREN          reduce using rule 23 (const -> NAME .)
-
-
-state 28
-
-    (4) call -> NAME EQUALS const .
-
-    COMMA           reduce using rule 4 (call -> NAME EQUALS const .)
-    AND             reduce using rule 4 (call -> NAME EQUALS const .)
-    OR              reduce using rule 4 (call -> NAME EQUALS const .)
-    RPAREN          reduce using rule 4 (call -> NAME EQUALS const .)
-    $end            reduce using rule 4 (call -> NAME EQUALS const .)
-
-
 state 29
 
-    (2) calls -> call COMMA calls .
+    (10) call -> SORT LPAREN sort_arglist . RPAREN
 
-    $end            reduce using rule 2 (calls -> call COMMA calls .)
+    RPAREN          shift and go to state 41
 
 
 state 30
 
-    (20) sort_prefix -> MINUS .
+    (15) sort_arglist -> sort_arg . COMMA sort_arglist
+    (16) sort_arglist -> sort_arg .
 
-    LPAREN          reduce using rule 20 (sort_prefix -> MINUS .)
-    NAME            reduce using rule 20 (sort_prefix -> MINUS .)
-    ICONST          reduce using rule 20 (sort_prefix -> MINUS .)
-    FCONST          reduce using rule 20 (sort_prefix -> MINUS .)
-    SORT            reduce using rule 20 (sort_prefix -> MINUS .)
+    COMMA           shift and go to state 42
+    RPAREN          reduce using rule 16 (sort_arglist -> sort_arg .)
 
 
 state 31
@@ -581,24 +579,40 @@ state 31
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    const                          shift and go to state 1
-    call                           shift and go to state 12
-    arg                            shift and go to state 41
+    call                           shift and go to state 14
+    arg                            shift and go to state 43
+    const                          shift and go to state 10
 
 state 32
 
-    (10) call -> SORT LPAREN sort_arglist . RPAREN
+    (18) sort_arg -> arg .
+    (6) call -> arg . AND arg
+    (7) call -> arg . OR arg
 
-    RPAREN          shift and go to state 42
+    COMMA           reduce using rule 18 (sort_arg -> arg .)
+    RPAREN          reduce using rule 18 (sort_arg -> arg .)
+    AND             shift and go to state 20
+    OR              shift and go to state 19
 
 
 state 33
+
+    (20) sort_prefix -> MINUS .
+
+    LPAREN          reduce using rule 20 (sort_prefix -> MINUS .)
+    NAME            reduce using rule 20 (sort_prefix -> MINUS .)
+    ICONST          reduce using rule 20 (sort_prefix -> MINUS .)
+    FCONST          reduce using rule 20 (sort_prefix -> MINUS .)
+    SORT            reduce using rule 20 (sort_prefix -> MINUS .)
+
+
+state 34
 
     (19) sort_prefix -> PLUS .
 
@@ -609,28 +623,30 @@ state 33
     SORT            reduce using rule 19 (sort_prefix -> PLUS .)
 
 
-state 34
-
-    (15) sort_arglist -> sort_arg . COMMA sort_arglist
-    (16) sort_arglist -> sort_arg .
-
-    COMMA           shift and go to state 43
-    RPAREN          reduce using rule 16 (sort_arglist -> sort_arg .)
-
-
 state 35
 
-    (18) sort_arg -> arg .
-    (6) call -> arg . AND arg
-    (7) call -> arg . OR arg
+    (2) calls -> call COMMA calls .
 
-    COMMA           reduce using rule 18 (sort_arg -> arg .)
-    RPAREN          reduce using rule 18 (sort_arg -> arg .)
-    AND             shift and go to state 19
-    OR              shift and go to state 20
+    $end            reduce using rule 2 (calls -> call COMMA calls .)
 
 
 state 36
+
+    (7) call -> arg OR arg .
+    (6) call -> arg . AND arg
+    (7) call -> arg . OR arg
+
+    COMMA           reduce using rule 7 (call -> arg OR arg .)
+    OR              reduce using rule 7 (call -> arg OR arg .)
+    RPAREN          reduce using rule 7 (call -> arg OR arg .)
+    $end            reduce using rule 7 (call -> arg OR arg .)
+    AND             shift and go to state 20
+
+  ! AND             [ reduce using rule 7 (call -> arg OR arg .) ]
+  ! OR              [ shift and go to state 19 ]
+
+
+state 37
 
     (6) call -> arg AND arg .
     (6) call -> arg . AND arg
@@ -642,34 +658,11 @@ state 36
     RPAREN          reduce using rule 6 (call -> arg AND arg .)
     $end            reduce using rule 6 (call -> arg AND arg .)
 
-  ! AND             [ shift and go to state 19 ]
-  ! OR              [ shift and go to state 20 ]
-
-
-state 37
-
-    (7) call -> arg OR arg .
-    (6) call -> arg . AND arg
-    (7) call -> arg . OR arg
-
-    COMMA           reduce using rule 7 (call -> arg OR arg .)
-    OR              reduce using rule 7 (call -> arg OR arg .)
-    RPAREN          reduce using rule 7 (call -> arg OR arg .)
-    $end            reduce using rule 7 (call -> arg OR arg .)
-    AND             shift and go to state 19
-
-  ! AND             [ reduce using rule 7 (call -> arg OR arg .) ]
-  ! OR              [ shift and go to state 20 ]
+  ! AND             [ shift and go to state 20 ]
+  ! OR              [ shift and go to state 19 ]
 
 
 state 38
-
-    (13) arglist -> arg COMMA arglist .
-
-    RPAREN          reduce using rule 13 (arglist -> arg COMMA arglist .)
-
-
-state 39
 
     (8) call -> NAME LPAREN arglist RPAREN .
 
@@ -680,7 +673,7 @@ state 39
     $end            reduce using rule 8 (call -> NAME LPAREN arglist RPAREN .)
 
 
-state 40
+state 39
 
     (5) call -> NAME EQUALS NAME EQUALS . const
     (23) const -> . NAME
@@ -688,24 +681,19 @@ state 40
     (25) const -> . FCONST
 
     NAME            shift and go to state 44
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
 
     const                          shift and go to state 45
 
+state 40
+
+    (13) arglist -> arg COMMA arglist .
+
+    RPAREN          reduce using rule 13 (arglist -> arg COMMA arglist .)
+
+
 state 41
-
-    (17) sort_arg -> sort_prefix arg .
-    (6) call -> arg . AND arg
-    (7) call -> arg . OR arg
-
-    COMMA           reduce using rule 17 (sort_arg -> sort_prefix arg .)
-    RPAREN          reduce using rule 17 (sort_arg -> sort_prefix arg .)
-    AND             shift and go to state 19
-    OR              shift and go to state 20
-
-
-state 42
 
     (10) call -> SORT LPAREN sort_arglist RPAREN .
 
@@ -716,7 +704,7 @@ state 42
     $end            reduce using rule 10 (call -> SORT LPAREN sort_arglist RPAREN .)
 
 
-state 43
+state 42
 
     (15) sort_arglist -> sort_arg COMMA . sort_arglist
     (15) sort_arglist -> . sort_arg COMMA sort_arglist
@@ -740,20 +728,32 @@ state 43
     (9) call -> . NAME LPAREN RPAREN
     (10) call -> . SORT LPAREN sort_arglist RPAREN
 
-    PLUS            shift and go to state 33
-    MINUS           shift and go to state 30
-    LPAREN          shift and go to state 2
-    NAME            shift and go to state 11
-    ICONST          shift and go to state 8
-    FCONST          shift and go to state 4
-    SORT            shift and go to state 9
+    PLUS            shift and go to state 34
+    MINUS           shift and go to state 33
+    LPAREN          shift and go to state 3
+    NAME            shift and go to state 13
+    ICONST          shift and go to state 5
+    FCONST          shift and go to state 2
+    SORT            shift and go to state 4
 
-    sort_arglist                   shift and go to state 46
-    call                           shift and go to state 12
+    sort_arg                       shift and go to state 30
     sort_prefix                    shift and go to state 31
-    sort_arg                       shift and go to state 34
-    const                          shift and go to state 1
-    arg                            shift and go to state 35
+    call                           shift and go to state 14
+    arg                            shift and go to state 32
+    const                          shift and go to state 10
+    sort_arglist                   shift and go to state 46
+
+state 43
+
+    (17) sort_arg -> sort_prefix arg .
+    (6) call -> arg . AND arg
+    (7) call -> arg . OR arg
+
+    COMMA           reduce using rule 17 (sort_arg -> sort_prefix arg .)
+    RPAREN          reduce using rule 17 (sort_arg -> sort_prefix arg .)
+    AND             shift and go to state 20
+    OR              shift and go to state 19
+
 
 state 44
 
@@ -786,4 +786,4 @@ state 46
 WARNING: 
 WARNING: Conflicts:
 WARNING: 
-WARNING: shift/reduce conflict for RPAREN in state 14 resolved as shift
+WARNING: shift/reduce conflict for RPAREN in state 16 resolved as shift

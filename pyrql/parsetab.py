@@ -7,7 +7,7 @@ _lr_method = 'LALR'
 
 _lr_signature = 'FA80967A25E8DE3E1D8D86B824FE0389'
     
-_lr_action_items = {'ICONST':([0,2,15,16,17,18,19,20,22,30,31,33,40,43,],[8,8,8,8,8,8,8,8,8,-20,8,-19,8,8,]),'MINUS':([18,43,],[30,30,]),'LPAREN':([0,2,3,9,11,15,17,18,19,20,22,30,31,33,43,],[2,2,15,18,15,2,2,2,2,2,2,-20,2,-19,2,]),'NAME':([0,2,15,16,17,18,19,20,22,30,31,33,40,43,],[3,11,11,27,3,11,11,11,11,-20,11,-19,44,11,]),'$end':([1,4,5,6,7,8,11,12,21,23,24,27,28,29,36,37,39,42,44,45,],[-21,-25,-3,-1,0,-24,-23,-22,-11,-12,-9,-23,-4,-2,-6,-7,-8,-10,-23,-5,]),'FCONST':([0,2,15,16,17,18,19,20,22,30,31,33,40,43,],[4,4,4,4,4,4,4,4,4,-20,4,-19,4,4,]),'EQUALS':([3,11,27,],[16,16,40,]),'OR':([1,3,4,5,8,10,11,12,14,21,23,24,26,27,28,35,36,37,39,41,42,44,45,],[-21,-23,-25,-22,-24,20,-23,-22,20,-11,-12,-9,20,-23,-4,20,-6,-7,-8,20,-10,-23,-5,]),'RPAREN':([1,4,8,11,12,13,14,15,21,23,24,25,26,27,28,32,34,35,36,37,38,39,41,42,44,45,46,],[-21,-25,-24,-23,-22,21,23,24,-11,-12,-9,39,-14,-23,-4,42,-16,-18,-6,-7,-13,-8,-17,-10,-23,-5,-15,]),'AND':([1,3,4,5,8,10,11,12,14,21,23,24,26,27,28,35,36,37,39,41,42,44,45,],[-21,-23,-25,-22,-24,19,-23,-22,19,-11,-12,-9,19,-23,-4,19,-6,19,-8,19,-10,-23,-5,]),'COMMA':([1,4,5,8,11,12,14,21,23,24,26,27,28,34,35,36,37,39,41,42,44,45,],[-21,-25,17,-24,-23,-22,22,-11,-12,-9,22,-23,-4,43,-18,-6,-7,-8,-17,-10,-23,-5,]),'PLUS':([18,43,],[33,33,]),'SORT':([0,2,15,17,18,19,20,22,30,31,33,43,],[9,9,9,9,9,9,9,9,-20,9,-19,9,]),}
+_lr_action_items = {'NAME':([0,3,11,12,17,18,19,20,27,31,33,34,39,42,],[1,13,13,24,13,1,13,13,13,13,-20,-19,44,13,]),'FCONST':([0,3,11,12,17,18,19,20,27,31,33,34,39,42,],[2,2,2,2,2,2,2,2,2,2,-20,-19,2,2,]),'LPAREN':([0,1,3,4,11,13,17,18,19,20,27,31,33,34,42,],[3,11,3,17,3,11,3,3,3,3,3,3,-20,-19,3,]),'AND':([1,2,5,6,9,10,13,14,16,22,23,24,25,26,28,32,36,37,38,41,43,44,45,],[-23,-25,-24,-22,20,-21,-23,-22,20,20,-9,-23,-4,-11,-12,20,20,-6,-8,-10,20,-23,-5,]),'SORT':([0,3,11,17,18,19,20,27,31,33,34,42,],[4,4,4,4,4,4,4,4,4,-20,-19,4,]),'OR':([1,2,5,6,9,10,13,14,16,22,23,24,25,26,28,32,36,37,38,41,43,44,45,],[-23,-25,-24,-22,19,-21,-23,-22,19,19,-9,-23,-4,-11,-12,19,-7,-6,-8,-10,19,-23,-5,]),'ICONST':([0,3,11,12,17,18,19,20,27,31,33,34,39,42,],[5,5,5,5,5,5,5,5,5,5,-20,-19,5,5,]),'EQUALS':([1,13,24,],[12,12,39,]),'$end':([2,5,6,7,8,10,13,14,23,24,25,26,28,35,36,37,38,41,44,45,],[-25,-24,-3,-1,0,-21,-23,-22,-9,-23,-4,-11,-12,-2,-7,-6,-8,-10,-23,-5,]),'PLUS':([17,42,],[34,34,]),'MINUS':([17,42,],[33,33,]),'COMMA':([2,5,6,10,13,14,16,22,23,24,25,26,28,30,32,36,37,38,41,43,44,45,],[-25,-24,18,-21,-23,-22,27,27,-9,-23,-4,-11,-12,42,-18,-7,-6,-8,-10,-17,-23,-5,]),'RPAREN':([2,5,10,11,13,14,15,16,21,22,23,24,25,26,28,29,30,32,36,37,38,40,41,43,44,45,46,],[-25,-24,-21,23,-23,-22,26,28,38,-14,-9,-23,-4,-11,-12,41,-16,-18,-7,-6,-8,-13,-10,-17,-23,-5,-15,]),}
 
 _lr_action = {}
 for _k, _v in _lr_action_items.items():
@@ -16,7 +16,7 @@ for _k, _v in _lr_action_items.items():
       _lr_action[_x][_k] = _y
 del _lr_action_items
 
-_lr_goto_items = {'sort_arglist':([18,43,],[32,46,]),'calls':([0,17,],[6,29,]),'toplevel':([0,],[7,]),'arglist':([2,15,22,],[13,25,38,]),'sort_prefix':([18,43,],[31,31,]),'const':([0,2,15,16,17,18,19,20,22,31,40,43,],[1,1,1,28,1,1,1,1,1,1,45,1,]),'sort_arg':([18,43,],[34,34,]),'call':([0,2,15,17,18,19,20,22,31,43,],[5,12,12,5,12,12,12,12,12,12,]),'arg':([0,2,15,17,18,19,20,22,31,43,],[10,14,26,10,35,36,37,26,41,35,]),}
+_lr_goto_items = {'sort_arglist':([17,42,],[29,46,]),'sort_arg':([17,42,],[30,30,]),'sort_prefix':([17,42,],[31,31,]),'arglist':([3,11,27,],[15,21,40,]),'toplevel':([0,],[8,]),'call':([0,3,11,17,18,19,20,27,31,42,],[6,14,14,14,6,14,14,14,14,14,]),'arg':([0,3,11,17,18,19,20,27,31,42,],[9,16,22,32,9,36,37,22,43,32,]),'calls':([0,18,],[7,35,]),'const':([0,3,11,12,17,18,19,20,27,31,39,42,],[10,10,10,25,10,10,10,10,10,10,45,10,]),}
 
 _lr_goto = {}
 for _k, _v in _lr_goto_items.items():
@@ -26,29 +26,29 @@ for _k, _v in _lr_goto_items.items():
 del _lr_goto_items
 _lr_productions = [
   ("S' -> toplevel","S'",1,None,None,None),
-  ('toplevel -> calls','toplevel',1,'p_toplevel','parser.py',130),
-  ('calls -> call COMMA calls','calls',3,'p_calls','parser.py',142),
-  ('calls -> call','calls',1,'p_calls','parser.py',143),
-  ('call -> NAME EQUALS const','call',3,'p_op_eq','parser.py',154),
-  ('call -> NAME EQUALS NAME EQUALS const','call',5,'p_fiql_ops','parser.py',161),
-  ('call -> arg AND arg','call',3,'p_op_and','parser.py',168),
-  ('call -> arg OR arg','call',3,'p_op_or','parser.py',175),
-  ('call -> NAME LPAREN arglist RPAREN','call',4,'p_generic_call','parser.py',182),
-  ('call -> NAME LPAREN RPAREN','call',3,'p_generic_call','parser.py',183),
-  ('call -> SORT LPAREN sort_arglist RPAREN','call',4,'p_sort_call','parser.py',193),
-  ('arg -> LPAREN arglist RPAREN','arg',3,'p_argarray','parser.py',201),
-  ('arg -> LPAREN arg RPAREN','arg',3,'p_paren_arg','parser.py',209),
-  ('arglist -> arg COMMA arglist','arglist',3,'p_arglist','parser.py',216),
-  ('arglist -> arg','arglist',1,'p_arglist','parser.py',217),
-  ('sort_arglist -> sort_arg COMMA sort_arglist','sort_arglist',3,'p_sort_arglist','parser.py',227),
-  ('sort_arglist -> sort_arg','sort_arglist',1,'p_sort_arglist','parser.py',228),
-  ('sort_arg -> sort_prefix arg','sort_arg',2,'p_sort_arg','parser.py',238),
-  ('sort_arg -> arg','sort_arg',1,'p_sort_arg','parser.py',239),
-  ('sort_prefix -> PLUS','sort_prefix',1,'p_sort_prefix','parser.py',250),
-  ('sort_prefix -> MINUS','sort_prefix',1,'p_sort_prefix','parser.py',251),
-  ('arg -> const','arg',1,'p_arg','parser.py',258),
-  ('arg -> call','arg',1,'p_arg','parser.py',259),
-  ('const -> NAME','const',1,'p_const','parser.py',267),
-  ('const -> ICONST','const',1,'p_const','parser.py',268),
-  ('const -> FCONST','const',1,'p_const','parser.py',269),
+  ('toplevel -> calls','toplevel',1,'p_toplevel','parser.py',133),
+  ('calls -> call COMMA calls','calls',3,'p_calls','parser.py',145),
+  ('calls -> call','calls',1,'p_calls','parser.py',146),
+  ('call -> NAME EQUALS const','call',3,'p_op_eq','parser.py',157),
+  ('call -> NAME EQUALS NAME EQUALS const','call',5,'p_fiql_ops','parser.py',164),
+  ('call -> arg AND arg','call',3,'p_op_and','parser.py',171),
+  ('call -> arg OR arg','call',3,'p_op_or','parser.py',178),
+  ('call -> NAME LPAREN arglist RPAREN','call',4,'p_generic_call','parser.py',185),
+  ('call -> NAME LPAREN RPAREN','call',3,'p_generic_call','parser.py',186),
+  ('call -> SORT LPAREN sort_arglist RPAREN','call',4,'p_sort_call','parser.py',196),
+  ('arg -> LPAREN arglist RPAREN','arg',3,'p_argarray','parser.py',204),
+  ('arg -> LPAREN arg RPAREN','arg',3,'p_paren_arg','parser.py',212),
+  ('arglist -> arg COMMA arglist','arglist',3,'p_arglist','parser.py',219),
+  ('arglist -> arg','arglist',1,'p_arglist','parser.py',220),
+  ('sort_arglist -> sort_arg COMMA sort_arglist','sort_arglist',3,'p_sort_arglist','parser.py',230),
+  ('sort_arglist -> sort_arg','sort_arglist',1,'p_sort_arglist','parser.py',231),
+  ('sort_arg -> sort_prefix arg','sort_arg',2,'p_sort_arg','parser.py',241),
+  ('sort_arg -> arg','sort_arg',1,'p_sort_arg','parser.py',242),
+  ('sort_prefix -> PLUS','sort_prefix',1,'p_sort_prefix','parser.py',253),
+  ('sort_prefix -> MINUS','sort_prefix',1,'p_sort_prefix','parser.py',254),
+  ('arg -> const','arg',1,'p_arg','parser.py',261),
+  ('arg -> call','arg',1,'p_arg','parser.py',262),
+  ('const -> NAME','const',1,'p_const','parser.py',278),
+  ('const -> ICONST','const',1,'p_const','parser.py',279),
+  ('const -> FCONST','const',1,'p_const','parser.py',280),
 ]
