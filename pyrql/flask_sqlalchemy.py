@@ -19,26 +19,25 @@ from copy import deepcopy
 
 class RQLQueryMixIn:
 
-    def rql(self, request):
+    def rql(self, request, limit=None):
+        if len(self._entities) > 1:
+            raise NotImplementedError("Query must have a single entity")
+
         expr = request.query_string
-
-        if not expr:
-            self.rql_parsed = None
-            self.rql_expr = None
-            return self
-
         if type(expr) is bytes:
             expr = expr.decode(request.charset)
 
-        self.rql_expr = expr = unquote(expr)
+        if not expr:
+            self.rql_parsed = None
+            self.rql_expr = ''
 
-        if len(self._entities) > 1:
-            raise NotImplementedError("query must have a single entity for now")
+        else:
+            self.rql_expr = expr = unquote(expr)
 
-        try:
-            self.rql_parsed = root = parser.parse(expr)
-        except RQLSyntaxError as exc:
-            raise BadRequest("RQL Syntax error: %s" % exc.args)
+            try:
+                self.rql_parsed = parser.parse(expr)
+            except RQLSyntaxError as exc:
+                raise BadRequest("RQL Syntax error: %s" % exc.args)
 
         self._rql_select_clause = None
         self._rql_where_clause = None
@@ -47,7 +46,7 @@ class RQLQueryMixIn:
         self._rql_offset_clause = None
         self._rql_joins = []
 
-        self._rql_walk(root)
+        self._rql_walk(self.rql_parsed)
 
         query = self
 
@@ -62,6 +61,10 @@ class RQLQueryMixIn:
 
         if self._rql_limit_clause is not None:
             query = query.limit(self._rql_limit_clause)
+
+        else:
+            if limit:
+                query = query.limit(limit)
 
         if self._rql_offset_clause is not None:
             query = query.offset(self._rql_offset_clause)
@@ -79,6 +82,9 @@ class RQLQueryMixIn:
         return unparser.unparse(parsed)
 
     def _rql_traverse_and_replace(self, root, name, args):
+        if root is None:
+            return False
+
         if root['name'] == name:
             root['args'] = args
             return True
@@ -92,7 +98,8 @@ class RQLQueryMixIn:
         return False
 
     def _rql_walk(self, node):
-        self._rql_where_clause = self._rql_apply(node)
+        if node:
+            self._rql_where_clause = self._rql_apply(node)
 
     def _rql_apply(self, node):
         if isinstance(node, dict):
@@ -217,3 +224,9 @@ class RQLQueryMixIn:
 
     def _rql_time(self, args):
         return datetime.time(*args)
+
+    def _rql_date(self, args):
+        return datetime.date(*args)
+
+    def _rql_dt(self, args):
+        return datetime.datetime(*args)
