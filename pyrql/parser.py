@@ -1,311 +1,128 @@
 # -*- coding: utf-8 -*-
 
-
-import ply.lex as lex
-import ply.yacc as yacc
-
-from .exceptions import RQLSyntaxError
+import pyparsing as pp
+from pyparsing import pyparsing_common as common
 
 
-RESERVED = {
-    # 'aggregate': 'AGGREGATE',
-    # 'and': 'AND',
-    # 'contains': 'CONTAINS',
-    # 'count': 'COUNT',
-    # 'distinct': 'DISTINCT',
-    # 'eq': 'EQ',
-    # 'excludes': 'EXCLUDES',
-    # 'first': 'FIRST',
-    # 'ge': 'GE',
-    # 'gt': 'GT',
-    # 'in': 'IN',
-    # 'le': 'LE',
-    # 'limit': 'LIMIT',
-    # 'lt': 'LT',
-    # 'max': 'MAX',
-    # 'mean': 'MEAN',
-    # 'min': 'MIN',
-    # 'ne': 'NE',
-    # 'one': 'ONE',
-    # 'or': 'OR',
-    # 'out': 'OUT',
-    # 'recurse': 'RECURSE',
-    # 'rel': 'REL',
-    # 'select': 'SELECT',
-    'sort': 'SORT',
-    # 'sum': 'SUM',
-    # 'values': 'VALUES'
-    'true': 'BOOL_TRUE',
-    'false': 'BOOL_FALSE',
-    'null': 'NULL',
-    }
-
-tokens = (
-    'NAME',
-    'LPAREN',
-    'RPAREN',
-    'ICONST',
-    'FCONST',
-    # 'SCONST',
-
-    # delimiters
-    # 'DOT',
-    'COMMA',
-
-    # operators
-    'PLUS',
-    'MINUS',
-
-    # 'DIV',
-    'EQUALS',
-    'AND',
-    'OR',
-
-    ) + tuple(RESERVED.values())
+def make_keyword(kwd_str, kwd_value):
+    return pp.Keyword(kwd_str).setParseAction(pp.replaceWith(kwd_value))
 
 
-precedence = (
-    ('left', 'OR'),
-    ('left', 'AND'),
-    )
-
-# t_DOT = r'\.'
-t_COMMA = r','
+def _or_call(expr, loc, toks):
+    return {'name': 'or', 'args': [toks[0], toks[1]]}
 
 
-# operators
-t_PLUS = r'\+'
-t_MINUS = r'-'
-# t_DIV = r'/'
-t_EQUALS = r'='
-t_AND = r'&'
-t_OR = r'\|'
-
-t_ignore = ' \t'
-
-t_BOOL_TRUE = r'true'
-t_BOOL_FALSE = r'false'
-t_NULL = r'null'
+def _and_call(expr, loc, toks):
+    if len(toks) == 1:
+        return toks[0]
+    else:
+        return {'name': 'and', 'args': [toks[0], toks[1]]}
 
 
-def t_NAME(t):
-    r'[a-zA-Z_\*][a-zA-Z0-9 _\*:]*'
-    t.type = RESERVED.get(t.value, "NAME")
-    return t
+def _eq_call(expr, loc, toks):
+    return {'name': 'eq', 'args': [toks[0], toks[1]]}
 
 
-def t_FCONST(t):
-    r'((\d+)(\.\d+)(e(\+|-)?(\d+))? | (\d+)e(\+|-)?(\d+))([lL]|[fF])?'
-    t.value = float(t.value)
-    return t
+def _fiql_call(expr, loc, toks):
+    return {'name': toks[1], 'args': [toks[0], toks[2]]}
 
 
-def t_ICONST(t):
-    r'\d+([uU]|[lL]|[uU][lL]|[lL][uU])?'
-    t.value = int(t.value)
-    return t
+def _simple_call(expr, loc, toks):
+    return {'name': toks.name, 'args': list(toks.get('args', []))}
 
 
-def t_SCONST(t):
-    r'(\\.)+?'
-    t.value = t.value
-    return t
+def _sort_call(expr, loc, toks):
+    return {'name': 'sort', 'args': toks.args.asList()}
 
 
-def t_LPAREN(t):
-    r'\('
-    try:
-        t.lexer.paren_count += 1
-    except AttributeError:
-        t.lexer.paren_count = 1
-    return t
+def _array(expr, loc, toks):
+    return tuple(toks)
 
 
-def t_RPAREN(t):
-    r'\)'
-    t.lexer.paren_count -= 1
-    return t
+def _toplevel(expr, loc, toks):
+    calls = [x for x in toks]
 
-
-def t_error(t):
-    raise RQLSyntaxError("Illegal character '%s'" % t.value[0])
-    t.lexer.skip(1)
-
-
-def p_toplevel(t):
-    """
-    toplevel : calls
-
-    """
-    if len(t[1]) == 1:
-        t[0] = t[1][0]
+    if len(calls) == 1:
+        return calls[0]
 
     else:
-        t[0] = {'name': 'and', 'args': t[1]}
+        return {'name': 'and', 'args': calls}
 
 
-def p_calls(t):
-    """
-    calls : call COMMA calls
-          | call
-    """
-    if len(t) == 2:
-        t[0] = [t[1]]
+TRUE = make_keyword('true', True)
+FALSE = make_keyword('false', False)
+NULL = make_keyword('null', None)
 
-    else:
-        t[0] = [t[1]] + t[3]
+# functions that require specific grammar and can't use generic SIMPLE_CALL
+SORT = make_keyword('sort', None).suppress()
 
+# grammar
+PLUS = pp.Literal('+')
+MINUS = pp.Literal('-')
+EQUALS = pp.Literal('=').suppress()
+AND = pp.Literal('&').suppress()
+OR = pp.Literal('|').suppress()
+DOT = pp.Literal('.')
+LPAR = pp.Literal('(').suppress()
+RPAR = pp.Literal(')').suppress()
+COMMA = pp.Literal(',')
+COLON = pp.Literal(':').suppress()
 
-def p_op_eq(t):
-    """
-    call : NAME EQUALS const
-    """
-    t[0] = {'name': 'eq', 'args': [t[1], t[3]]}
+STRING = pp.Word(pp.alphanums + '_*:+-')
+NUMBER = common.number
 
+IDENT = common.identifier.setResultsName('name')
 
-def p_fiql_ops(t):
-    """
-    call : NAME EQUALS NAME EQUALS const
-    """
-    t[0] = {'name': t[3], 'args': [t[1], t[5]]}
+CONV_STRING = (pp.Literal('string').suppress() + COLON + STRING)
+CONV_NUMBER = (pp.Literal('number').suppress() + COLON + NUMBER)
+CONV_DATE = (pp.Literal('date').suppress() + COLON + common.iso8601_date)\
+    .setParseAction(common.convertToDate())
+# add boolean, epoch and date
 
+CONV = (CONV_DATE | CONV_STRING | CONV_NUMBER)
 
-def p_op_and(t):
-    """
-    call : arg AND arg
-    """
-    t[0] = {'name': 'and', 'args': [t[1], t[3]]}
+VALUE = (CONV | NUMBER | TRUE | FALSE | NULL | STRING)
 
+ARRAY = (LPAR + pp.delimitedList(VALUE) + RPAR).setParseAction(_array) | VALUE
 
-def p_op_or(t):
-    """
-    call : arg OR arg
-    """
-    t[0] = {'name': 'or', 'args': [t[1], t[3]]}
+EQ_EXPR = (IDENT + EQUALS + ARRAY).setParseAction(_eq_call)
+FIQL_EXPR = (IDENT + EQUALS + IDENT + EQUALS + ARRAY).setParseAction(_fiql_call)
 
+CALL = pp.Forward()
 
-def p_generic_call(t):
-    """
-    call : NAME LPAREN arglist RPAREN
-         | NAME LPAREN RPAREN
-    """
-    if len(t) == 4:
-        t[0] = {'name': t[1], 'args': []}
-    else:
-        t[0] = {'name': t[1], 'args': t[3]}
+ARG = CALL | ARRAY
 
+OR_EXPR = (ARG + OR + ARG).setParseAction(_or_call)
+AND_EXPR = (ARG + AND + ARG).setParseAction(_and_call)
 
-def p_sort_call(t):
-    """
-    call : SORT LPAREN sort_arglist RPAREN
+ARGLIST = pp.delimitedList(ARG).setResultsName('args')
 
-    """
-    t[0] = {'name': 'sort', 'args': t[3]}
+SIMPLE_CALL = (IDENT + LPAR + pp.Optional(ARGLIST) + RPAR).setParseAction(_simple_call)
 
+SORT_ARG = ((MINUS | PLUS) + ARRAY).setParseAction(lambda e, l, t: tuple(t))
+SORT_ARGLIST = pp.delimitedList(SORT_ARG).setResultsName('args')
+SORT_CALL = (SORT + LPAR + SORT_ARGLIST + RPAR).setParseAction(_sort_call)
 
-def p_argarray(t):
-    """
-    arg : LPAREN arglist RPAREN
+CALL <<= (SORT_CALL | SIMPLE_CALL | FIQL_EXPR | EQ_EXPR)
 
-    """
-    t[0] = tuple(t[2])
+AND_CALL = (CALL + AND + CALL).setParseAction(_and_call)
+OR_CALL = (CALL + OR + CALL).setParseAction(_or_call)
 
 
-def p_paren_arg(t):
-    """
-    arg : LPAREN arg RPAREN
-    """
-    t[0] = t[2]
+OPCALL = (AND_CALL | OR_CALL | CALL)
 
 
-def p_arglist(t):
-    """
-    arglist : arg COMMA arglist
-            | arg
-    """
-    if len(t) == 2:
-        t[0] = [t[1]]
-    else:
-        t[0] = [t[1]] + t[3]
+CALLS = pp.Optional(LPAR) + pp.delimitedList(OPCALL) + pp.Optional(RPAR)
+
+TOPLEVEL = pp.delimitedList(CALLS).setParseAction(_toplevel)
 
 
-def p_sort_arglist(t):
-    """
-    sort_arglist : sort_arg COMMA sort_arglist
-                 | sort_arg
-    """
-    if len(t) == 2:
-        t[0] = [t[1]]
-    else:
-        t[0] = [t[1]] + t[3]
+class Parser:
+
+    def parse(self, expr):
+        result = TOPLEVEL.parseString(expr)
+
+        return result[0]
 
 
-def p_sort_arg(t):
-    """
-    sort_arg : sort_prefix arg
-             | arg
-    """
-    if len(t) == 2:
-        t[0] = t[1]
-
-    else:
-        t[0] = (t[1], t[2])
-
-
-def p_sort_prefix(t):
-    """
-    sort_prefix : PLUS
-                | MINUS
-    """
-    t[0] = t[1]
-
-
-def p_arg(t):
-    """
-    arg : const
-        | call
-    """
-
-    t[0] = t[1]
-
-
-def p_true(t):
-    """
-    const : BOOL_TRUE
-
-    """
-    t[0] = True
-
-
-def p_false(t):
-    """
-    const : BOOL_FALSE
-
-    """
-    t[0] = False
-
-
-def p_null(t):
-    """
-    const : NULL
-
-    """
-    t[0] = None
-
-
-def p_const(t):
-    """
-    const : NAME
-          | ICONST
-          | FCONST
-    """
-    t[0] = t[1]
-
-
-def p_error(p):
-    raise RQLSyntaxError("Syntax error at '%s'" % p.value)
-
-
-lex.lex()
-
-parser = yacc.yacc()
+parser = Parser()
