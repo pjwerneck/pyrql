@@ -52,6 +52,7 @@ class TestTokens:
          ('datetime:2017-01-01T22:04:23', datetime.datetime(2017, 1, 1, 22, 4, 23)),
          ('boolean:true', True),
          ('boolean:false', False),
+         ('epoch:1346201641.0', datetime.datetime(2012, 8, 29, 0, 54, 1)),
          ])
     def test_TYPED_VALUE(self, exre):
         expr, rep = exre

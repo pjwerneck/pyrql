@@ -4,25 +4,21 @@ import pyparsing as pp
 from pyparsing import pyparsing_common as common
 from six.moves import urllib
 
-# converters:
-# number
-# epoch
-# isodate
-# date
-# boolean
-# string
-# re
-# RE
-# glob
-
+from dateutil.parser import parse as dateparse
+from datetime import datetime
 
 # autoconvert:
 # numbers
 # booleans
 # null
 
-
-
+# converters:
+# number
+# epoch
+# date
+# datetime
+# boolean
+# string
 
 
 def _sort_call(expr, loc, toks):
@@ -75,6 +71,18 @@ def _group(expr, loc, toks):
     return toks[0]
 
 
+def _date(expr, loc, toks):
+    return dateparse(toks[0]).date()
+
+
+def _datetime(expr, loc, toks):
+    return dateparse(toks[0])
+
+
+def _epoch(expr, loc, toks):
+    return datetime.utcfromtimestamp(toks[0])
+
+
 TRUE = pp.Keyword('true').setParseAction(pp.replaceWith(True))
 FALSE = pp.Keyword('false').setParseAction(pp.replaceWith(False))
 NULL = pp.Keyword('null').setParseAction(pp.replaceWith(None))
@@ -88,6 +96,7 @@ K_STRING = pp.Keyword('string').suppress()
 K_DATE = pp.Keyword('date').suppress()
 K_DATETIME = pp.Keyword('datetime').suppress()
 K_BOOL = pp.Keyword('boolean').suppress()
+K_EPOCH = pp.Keyword('epoch').suppress()
 
 # grammar
 PLUS = pp.Literal('+')
@@ -109,12 +118,13 @@ NUMBER = common.number
 
 TYPED_STRING = (K_STRING + COLON + STRING)
 TYPED_NUMBER = (K_NUMBER + COLON + common.number)
-TYPED_DATE = (K_DATE + COLON + common.iso8601_date).setParseAction(common.convertToDate())
-TYPED_DATETIME = (K_DATETIME + COLON + common.iso8601_datetime).setParseAction(
-    common.convertToDatetime(fmt='%Y-%m-%dT%H:%M:%S'))
+TYPED_DATE = (K_DATE + COLON + common.iso8601_date).setParseAction(_date)
+TYPED_DATETIME = (K_DATETIME + COLON + common.iso8601_datetime).setParseAction(_datetime)
 TYPED_BOOL = (K_BOOL + COLON + (TRUE | FALSE))
+TYPED_EPOCH = (K_EPOCH + COLON + common.number).setParseAction(_epoch)
 
 TYPED_VALUE = (
+    TYPED_EPOCH |
     TYPED_DATETIME |
     TYPED_DATE |
     TYPED_NUMBER |
