@@ -163,7 +163,7 @@ class TestTokens:
     def test_call_parenthesis(self):
         expr = '(a(1))'
 
-        pd = pm.CALLS.parseString(expr)
+        pd = pm.ARG.parseString(expr)
         assert pd[0] == {'name': 'a', 'args': [1]}
 
 
@@ -174,7 +174,7 @@ class TestParser:
 
         assert p1 == p2
 
-    def test_and_operator(self):
+    def test_and_operator_pair(self):
         p1 = parser.parse('eq(a,0)&eq(b,1)')
         p2 = parser.parse('and(eq(a, 0), eq(b, 1))')
 
@@ -183,6 +183,18 @@ class TestParser:
 
         assert p1 == p2
         assert p1 == p3
+
+    def test_and_operator_triple(self):
+        p1 = parser.parse('eq(a,0)&eq(b,1)&eq(c,2)')
+        p2 = parser.parse('and(eq(a, 0), eq(b, 1))')
+
+        p3 = {'name': 'and', 'args': [{'name': 'eq', 'args': ['a', 0]},
+                                      {'name': 'eq', 'args': ['b', 1]},
+                                      {'name': 'eq', 'args': ['c', 2]}]}
+
+        assert p1 == p2
+        assert p1 == p3
+
 
     def test_or_operator(self):
         p1 = parser.parse('eq(a,0)|eq(b,1)')
@@ -273,34 +285,33 @@ class TestParser:
         assert parser.parse(expr) == parsed
         assert unparser.unparse(parsed) == expr
 
+    @pytest.mark.parametrize('expr', ['foo=3&price=lt=10',
+                                      'eq(foo,3)&lt(price,10)',
+                                      'and(eq(foo,3),lt(price,10))',
+                                      ])
+    def test_equivalent_expressions(self, expr):
+        parsed = parser.parse(expr)
 
-# @pytest.mark.parametrize('expr', ['foo=3&price=lt=10',
-#                                   'eq(foo,3)&lt(price,10)',
-#                                   'and(eq(foo,3),lt(price,10))',
-#                                   ])
-# def test_equivalent_expressions(expr):
-#     parsed = parser.parse(expr)
+        assert parsed == {'name': 'and', 'args': [{'name': 'eq', 'args': ['foo', 3]},
+                                                  {'name': 'lt', 'args': ['price', 10]}]}
 
-#     assert parsed == {'name': 'and', 'args': [{'name': 'eq', 'args': ['foo', 3]},
-#                                               {'name': 'lt', 'args': ['price', 10]}]}
+    def test_toplevel_and(self):
+        parsed = parser.parse('eq(a, 1),eq(b, 2),eq(c, 3)')
 
+        assert parsed == {'name': 'and', 'args': [{'name': 'eq', 'args': ['a', 1]},
+                                                  {'name': 'eq', 'args': ['b', 2]},
+                                                  {'name': 'eq', 'args': ['c', 3]},
+                                                  ]}
 
-# def test_toplevel_and():
-#     parsed = parser.parse('eq(a, 1),eq(b, 2),eq(c, 3)')
+    def test_parenthesis(self):
+        parsed = parser.parse('(state=Florida|state=Alabama)&gender=female')
 
-#     assert parsed == {'name': 'and', 'args': [{'name': 'eq', 'args': ['a', 1]},
-#                                               {'name': 'eq', 'args': ['b', 2]},
-#                                               {'name': 'eq', 'args': ['c', 3]},
-#                                               ]}
+        import pdb; pdb.set_trace()
 
-
-# def _test_parenthesis():
-#     parsed = parser.parse('(state=Florida|state=Alabama)&gender=female')
-
-#     assert parsed == {'name': 'and',
-#                       'args': [{'name': 'or',
-#                                 'args': [{'name': 'eq', 'args': ['state', 'Florida']},
-#                                          {'name': 'eq', 'args': ['state', 'Alabama']},
-#                                          ],
-#                                 },
-#                                {'name': 'eq', 'args': ['gender', 'female']}]}
+        assert parsed == {'name': 'and',
+                          'args': [{'name': 'or',
+                                    'args': [{'name': 'eq', 'args': ['state', 'Florida']},
+                                             {'name': 'eq', 'args': ['state', 'Alabama']},
+                                             ],
+                                    },
+                                   {'name': 'eq', 'args': ['gender', 'female']}]}

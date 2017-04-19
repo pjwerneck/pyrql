@@ -39,7 +39,8 @@ def _array(expr, loc, toks):
     return tuple(toks)
 
 
-def _toplevel(expr, loc, toks):
+def _calls(expr, loc, toks):
+    #import pdb; pdb.set_trace()
     calls = [x for x in toks]
 
     if len(calls) == 1:
@@ -90,12 +91,17 @@ FIQL_EXPR = (IDENT + EQUALS + IDENT + EQUALS + ARRAY).setParseAction(_fiql_call)
 
 CALL = pp.Forward()
 
-ARG = CALL | ARRAY
+ARG = pp.Forward()
+
 
 OR_EXPR = (ARG + OR + ARG).setParseAction(_or_call)
 AND_EXPR = (ARG + AND + ARG).setParseAction(_and_call)
 
 ARGLIST = pp.delimitedList(ARG).setResultsName('args')
+
+ARGARRAY = LPAR + ARGLIST + RPAR
+
+ARG <<= (CALL | ARRAY | ARGARRAY)
 
 SIMPLE_CALL = (IDENT + LPAR + pp.Optional(ARGLIST) + RPAR).setParseAction(_simple_call)
 
@@ -108,13 +114,13 @@ CALL <<= (SORT_CALL | SIMPLE_CALL | FIQL_EXPR | EQ_EXPR)
 AND_CALL = (CALL + AND + CALL).setParseAction(_and_call)
 OR_CALL = (CALL + OR + CALL).setParseAction(_or_call)
 
-
 OPCALL = (AND_CALL | OR_CALL | CALL)
 
+OPCALLS = (pp.Optional(LPAR) + pp.delimitedList(OPCALL) + pp.Optional(RPAR)).setParseAction(_calls)
 
-CALLS = pp.Optional(LPAR) + pp.delimitedList(OPCALL) + pp.Optional(RPAR)
+CALLS = (pp.Optional(LPAR) + pp.delimitedList(OPCALLS) + pp.Optional(RPAR)).setParseAction(_calls)
 
-TOPLEVEL = pp.delimitedList(CALLS).setParseAction(_toplevel)
+TOPLEVEL = CALLS
 
 
 class Parser:
