@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 
+from datetime import datetime
+
 import pyparsing as pp
+from dateutil.parser import parse as dateparse
 from pyparsing import pyparsing_common as common
 from six.moves import urllib
 
-from dateutil.parser import parse as dateparse
-from datetime import datetime
 
 # autoconvert:
 # numbers
@@ -135,7 +136,9 @@ ARRAY = pp.Forward()
 
 VALUE = TYPED_VALUE | ARRAY | TRUE | FALSE | NULL | NUMBER | STRING
 
-ARRAY <<= (LPAR + pp.delimitedList(VALUE) + RPAR).setParseAction(_array)
+PAR_ARRAY = (LPAR + pp.delimitedList(VALUE) + RPAR).setParseAction(_array)
+
+ARRAY <<= PAR_ARRAY
 
 CALL_OPERATOR = pp.Forward()
 
