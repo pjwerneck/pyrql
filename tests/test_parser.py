@@ -393,3 +393,8 @@ class TestExamples:
 
         pd = parser.parse(expr)
         assert pd == rep
+
+    def test_syntax_error(self):
+        expr = 'lero===lero'
+        with pytest.raises(pm.RQLSyntaxError):
+            parser.parse(expr)

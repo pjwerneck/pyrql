@@ -7,6 +7,8 @@ from dateutil.parser import parse as dateparse
 from pyparsing import pyparsing_common as common
 from six.moves import urllib
 
+from .exceptions import RQLSyntaxError
+
 
 # autoconvert:
 # numbers
@@ -172,7 +174,10 @@ QUERY = pp.delimitedList(AND).setParseAction(_and)
 class Parser:
 
     def parse(self, expr):
-        result = QUERY.parseString(expr)
+        try:
+            result = QUERY.parseString(expr)
+        except pp.ParseException as exc:
+            raise RQLSyntaxError(*exc.args)
 
         return result[0]
 
