@@ -398,3 +398,20 @@ class TestExamples:
         expr = 'lero===lero'
         with pytest.raises(pm.RQLSyntaxError):
             parser.parse(expr)
+
+
+class TestReportedErrors:
+
+    def test_like_with_string_parameter(self):
+        expr = 'like(name,*new jack city*)'
+        rep = {'name': 'like', 'args': ['name', '*new jack city*']}
+
+        pd = parser.parse(expr)
+        assert pd == rep
+
+    def test_like_with_string_encoded_parameter(self):
+        expr = 'like(name,*new%20jack%20city*)'
+        rep = {'name': 'like', 'args': ['name', '*new jack city*']}
+
+        pd = parser.parse(expr)
+        assert pd == rep

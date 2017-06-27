@@ -37,7 +37,7 @@ class RQLQueryMixIn:
             try:
                 self.rql_parsed = parser.parse(expr)
             except RQLSyntaxError as exc:
-                raise BadRequest("RQL Syntax error: %s" % exc.args)
+                raise BadRequest("RQL Syntax error: %r" % (exc.args,))
 
         self._rql_select_clause = None
         self._rql_where_clause = None

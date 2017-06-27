@@ -109,7 +109,7 @@ LPAR = pp.Literal('(').suppress()
 RPAR = pp.Literal(')').suppress()
 COLON = pp.Literal(':').suppress()
 
-UNRESERVED = pp.Word(pp.alphanums + '-:._~', exact=1)
+UNRESERVED = pp.Word(pp.alphanums + '-:._~ ', exact=1)
 PCT_ENCODED = pp.Combine(pp.Literal('%') + pp.Word(pp.hexnums, exact=2)).setParseAction(_unquote)
 NCHAR = (UNRESERVED | PCT_ENCODED | '*' | '+')
 
