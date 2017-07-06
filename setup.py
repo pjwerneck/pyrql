@@ -1,18 +1,34 @@
 # -*- coding: utf-8 -*-
 
-import os.path
-from setuptools import setup, find_packages
+import os
+import re
+import sys
 
-version = '0.3.3'
 
-requirements = []
-with open(os.path.join(os.path.dirname(__file__), 'requirements.txt')) as fp:
-    requirements = [req.strip() for req in fp.readlines()]
+try:
+    from setuptools import setup
+except ImportError:
+    from distutils.core import setup
 
-setup(name='pyrql',
-      version=version,
-      description="RQL parsing and query generator",
-      packages=find_packages(exclude=['tests']),
-      zip_safe=False,
-      install_requires=requirements,
-      )
+
+with open('pyrql/__init__.py', 'r') as fd:
+    version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+                        fd.read(), re.MULTILINE).group(1)
+
+packages = [
+    'pyrql'
+    ]
+
+install = [
+    'pyparsing',
+    'python-dateutil',
+    ]
+
+setup(
+    name='pyrql',
+    version=version,
+    description="RQL parsing",
+    packages=packages,
+    tests_require=['pytest'],
+    install_requires=install,
+    )
