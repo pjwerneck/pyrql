@@ -4,11 +4,11 @@ import datetime
 
 import pytest
 
+from pyrql import RQLSyntaxError
+from pyrql import parse
 from pyrql import parser as pm
-from pyrql.unparser import unparser
+from pyrql import unparse
 
-
-parser = pm.parser
 
 CMP_OPS = ['eq', 'lt', 'le', 'gt', 'ge', 'ne']
 
@@ -163,6 +163,7 @@ class TestTokens:
 
 
 class TestParser:
+
     @pytest.mark.parametrize('exre',
                              [('a(1)', [1]),
                               ('a(3.14)', [3.14]),
@@ -173,7 +174,7 @@ class TestParser:
     def test_autoconverted_values(self, exre):
         expr, args = exre
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == {'name': 'a', 'args': args}
 
     @pytest.mark.parametrize('op', CMP_OPS)
@@ -186,18 +187,18 @@ class TestParser:
     def test_op_calls(self, op, exre):
         expr, rep = exre
 
-        pd = parser.parse(expr % op)
+        pd = parse(expr % op)
 
         assert pd == {'name': op, 'args': rep}
 
     def test_equality_operator(self):
-        p1 = parser.parse('lero=0')
-        p2 = parser.parse('eq(lero, 0)')
+        p1 = parse('lero=0')
+        p2 = parse('eq(lero, 0)')
         assert p1 == p2
 
     def test_and_operator_pair(self):
-        p1 = parser.parse('eq(a,0)&eq(b,1)')
-        p2 = parser.parse('and(eq(a, 0), eq(b, 1))')
+        p1 = parse('eq(a,0)&eq(b,1)')
+        p2 = parse('and(eq(a, 0), eq(b, 1))')
 
         p3 = {'name': 'and', 'args': [{'name': 'eq', 'args': ['a', 0]},
                                       {'name': 'eq', 'args': ['b', 1]}]}
@@ -206,8 +207,8 @@ class TestParser:
         assert p1 == p3
 
     def test_and_operator_triple(self):
-        p1 = parser.parse('eq(a,0)&eq(b,1)&eq(c,2)')
-        p2 = parser.parse('and(eq(a, 0), eq(b, 1), eq(c, 2))')
+        p1 = parse('eq(a,0)&eq(b,1)&eq(c,2)')
+        p2 = parse('and(eq(a, 0), eq(b, 1), eq(c, 2))')
 
         p3 = {'name': 'and', 'args': [{'name': 'eq', 'args': ['a', 0]},
                                       {'name': 'eq', 'args': ['b', 1]},
@@ -217,8 +218,8 @@ class TestParser:
         assert p1 == p3
 
     def test_or_operator(self):
-        p1 = parser.parse('(f(1)|f(2))')
-        p2 = parser.parse('or(f(1),f(2))')
+        p1 = parse('(f(1)|f(2))')
+        p2 = parse('or(f(1),f(2))')
 
         p3 = {'name': 'or', 'args': [{'name': 'f', 'args': [1]},
                                      {'name': 'f', 'args': [2]}]}
@@ -231,9 +232,9 @@ class TestParser:
         expr = '%s(name,(a,b))' % func
         rep = {'name': func, 'args': ['name', ('a', 'b')]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
-        assert unparser.unparse(pd) == expr
+        assert unparse(pd) == expr
 
     @pytest.mark.parametrize('func', ['and', 'or'])
     @pytest.mark.parametrize('args', [['a', 'b'], ['a', 'b', 'c'], ['a', 'b', 'c', 'd']])
@@ -241,9 +242,9 @@ class TestParser:
         expr = '%s(%s)' % (func, ','.join(args))
         rep = {'name': func, 'args': args}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert rep == pd
-        assert unparser.unparse(pd, level=1) == expr
+        assert unparse(pd) == expr
 
     @pytest.mark.parametrize(
         'exre',
@@ -255,7 +256,7 @@ class TestParser:
         expr, args = exre
         rep = {'name': 'sort', 'args': args}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     @pytest.mark.parametrize('func', ['select', 'values'])
@@ -263,56 +264,56 @@ class TestParser:
         expr = '%s(username,password,(address,city))' % func
         rep = {'name': func, 'args': ['username', 'password', ('address', 'city')]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
-        assert unparser.unparse(pd) == expr
+        assert unparse(pd) == expr
 
     @pytest.mark.parametrize('func', ['sum', 'mean', 'max', 'min', 'count'])
     def test_aggregate_functions(self, func):
         expr = '%s((a,b,c))' % func
         rep = {'name': func, 'args': [('a', 'b', 'c')]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
-        assert unparser.unparse(pd) == expr
+        assert unparse(pd) == expr
 
     @pytest.mark.parametrize('func', ['distinct', 'first', 'one'])
     def test_result_functions(self, func):
         expr = '%s()' % func
         rep = {'name': func, 'args': []}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
-        assert unparser.unparse(pd) == expr
+        assert unparse(pd) == expr
 
     def test_limit_function(self):
         expr = 'limit(10,0)'
         rep = {'name': 'limit', 'args': [10, 0]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert rep == pd
-        assert unparser.unparse(pd) == expr
+        assert unparse(pd) == expr
 
     def test_recurse_function(self):
         expr = 'recurse(lero)'
         rep = {'name': 'recurse', 'args': ['lero']}
-        pd = parser.parse(expr)
+        pd = parse(expr)
 
         assert rep == pd
-        assert unparser.unparse(pd) == expr
+        assert unparse(pd) == expr
 
     @pytest.mark.parametrize('expr', ['foo=3&price=lt=10',
                                       'eq(foo,3)&lt(price,10)',
                                       'and(eq(foo,3),lt(price,10))',
                                       ])
     def test_equivalent_expressions(self, expr):
-        pd = parser.parse(expr)
+        pd = parse(expr)
         rep = {'name': 'and', 'args': [{'name': 'eq', 'args': ['foo', 3]},
                                        {'name': 'lt', 'args': ['price', 10]}]}
         assert pd == rep
 
     def test_toplevel_and(self):
-        pd = parser.parse('eq(a, 1),eq(b, 2),eq(c, 3)')
+        pd = parse('eq(a, 1),eq(b, 2),eq(c, 3)')
         rep = {'name': 'and', 'args': [{'name': 'eq', 'args': ['a', 1]},
                                        {'name': 'eq', 'args': ['b', 2]},
                                        {'name': 'eq', 'args': ['c', 3]},
@@ -320,7 +321,7 @@ class TestParser:
         assert pd == rep
 
     def test_parenthesis(self):
-        pd = parser.parse('(state=Florida|state=Alabama)&gender=female')
+        pd = parse('(state=Florida|state=Alabama)&gender=female')
         rep = {'name': 'and',
                'args': [{'name': 'or',
                          'args': [{'name': 'eq', 'args': ['state', 'Florida']},
@@ -338,14 +339,14 @@ class TestExamples:
         rep = {'name': 'and', 'args': [{'name': 'eq', 'args': ['category', 'dates']},
                                        {'name': 'sort', 'args': [('+', 'price')]}]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     def test_rfc_arrays_example(self):
         expr = 'in(category,(toy,food))'
         rep = {'name': 'in', 'args': ['category', ('toy', 'food')]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     def test_rfc_nested_operators_example(self):
@@ -353,7 +354,7 @@ class TestExamples:
         rep = {'name': 'or', 'args': [{'name': 'eq', 'args': ['category', 'toy']},
                                       {'name': 'eq', 'args': ['category', 'food']}]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     @pytest.mark.parametrize(
@@ -364,14 +365,14 @@ class TestExamples:
     def test_rfc_sort_examples(self, exre):
         expr, args = exre
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == {'name': 'sort', 'args': args}
 
     def test_rfc_aggregate_example(self):
         expr = 'aggregate(departmentId,sum(sales))'
         rep = {'name': 'aggregate', 'args': ['departmentId', {'name': 'sum', 'args': ['sales']}]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     def test_rfc_comparison_example(self):
@@ -384,20 +385,20 @@ class TestExamples:
                  }
                 ]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     def test_rfc_typed_value_example(self):
         expr = 'foo=number:4'
         rep = {'name': 'eq', 'args': ['foo', 4]}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     def test_syntax_error(self):
         expr = 'lero===lero'
-        with pytest.raises(pm.RQLSyntaxError):
-            parser.parse(expr)
+        with pytest.raises(RQLSyntaxError):
+            parse(expr)
 
 
 class TestReportedErrors:
@@ -406,12 +407,12 @@ class TestReportedErrors:
         expr = 'like(name,*new jack city*)'
         rep = {'name': 'like', 'args': ['name', '*new jack city*']}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep
 
     def test_like_with_string_encoded_parameter(self):
         expr = 'like(name,*new%20jack%20city*)'
         rep = {'name': 'like', 'args': ['name', '*new jack city*']}
 
-        pd = parser.parse(expr)
+        pd = parse(expr)
         assert pd == rep

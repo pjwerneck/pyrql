@@ -2,14 +2,15 @@
 
 
 class Unparser:
-    def unparse(self, expr, level=0):
+
+    def unparse(self, expr):
         name = expr.get('name')
 
         args = []
 
         for a in expr.get('args', []):
             if isinstance(a, dict):
-                arg = self.unparse(a, level=level+1)
+                arg = self.unparse(a)
 
             elif isinstance(a, tuple):
                 arg = self.unparse_tuple(a)
@@ -18,11 +19,6 @@ class Unparser:
                 arg = a
 
             args.append(arg)
-
-        # if this is a toplevel and function, use commas instead of
-        # explicit and function
-        if name == 'and' and level == 0:
-            return','.join(map(str, args))
 
         return '{}({})'.format(name, ','.join(map(str, args)))
 
@@ -45,6 +41,3 @@ class Unparser:
 
         else:
             return prefix + '(' + ','.join(tokens) + ')'
-
-
-unparser = Unparser()

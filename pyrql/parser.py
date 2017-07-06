@@ -180,6 +180,3 @@ class Parser:
             raise RQLSyntaxError(*exc.args)
 
         return result[0]
-
-
-parser = Parser()
