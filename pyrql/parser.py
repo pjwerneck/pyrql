@@ -63,13 +63,6 @@ def _and(expr, loc, toks):
         return {'name': 'and', 'args': toks.asList()}
 
 
-def _query(expr, loc, toks):
-    if len(toks) == 1:
-        return toks[0]
-    else:
-        return {'name': 'and', 'args': toks.asList()}
-
-
 def _group(expr, loc, toks):
     return toks[0]
 
