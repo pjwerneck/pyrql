@@ -10,6 +10,16 @@ try:
 except ImportError:
     from distutils.core import setup
 
+if sys.argv[-1] == 'test':
+    try:
+        __import__('pytest')
+    except ImportError:
+        print('pytest required.')
+        sys.exit(1)
+
+    errors = os.system('pytest')
+    sys.exit(bool(errors))
+
 
 with open('pyrql/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
