@@ -70,7 +70,7 @@ Types can be explicitly specified using a colon:
 
 ### URL encoding
 
-The parser automatically unquotes strings with percent-encoding, but it also accepts characters that would require encoding if submitted on an URI. 
+The parser automatically unquotes strings with percent-encoding, but it also accepts characters that would require encoding if submitted on an URI.
 
 ```
 >>> pyrql.parse('eq(foo,lero lero)')
@@ -84,9 +84,9 @@ If that's undesirable, you should verify the URL before calling the parser.
 
 ### Limitations
 
-The pyrql parser doesn't implement a few redundant details of the RQL syntax, either because the standard isn't clear on what's allowed, or the functionality is already available in a clearer syntax. 
+The pyrql parser doesn't implement a few redundant details of the RQL syntax, either because the standard isn't clear on what's allowed, or the functionality is already available in a clearer syntax.
 
- The only operator allowed at the query top level is the AND operator, i.e. `&`. A toplevel `or` operation using the `|` operator must be enclosed in parenthesis.
+The only operator allowed at the query top level is the AND operator, i.e. `&`. A toplevel `or` operation using the `|` operator must be enclosed in parenthesis.
 
 ```
 >>> pyrql.parse('(a=1|b=2)')
@@ -99,4 +99,3 @@ The slash syntax for arrays is not implemented and will result in a syntax error
 >>> pyrql.parse('(a,b)=1')
 {'args': [('a', 'b'), 1], 'name': 'eq'}
 ```
-
