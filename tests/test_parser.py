@@ -4,7 +4,6 @@ import datetime
 
 import pytest
 
-from pyrql import RQLSyntaxError
 from pyrql import parse
 from pyrql import unparse
 
@@ -179,90 +178,4 @@ class TestParser:
                                   ]},
                         {'name': 'eq', 'args': ['gender', 'female']}]}
 
-        assert pd == rep
-
-
-class TestExamples:
-
-    def test_rfc_abstract_example(self):
-        expr = 'category=dates&sort(+price)'
-        rep = {'name': 'and', 'args': [{'name': 'eq', 'args': ['category', 'dates']},
-                                       {'name': 'sort', 'args': [('+', 'price')]}]}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    def test_rfc_arrays_example(self):
-        expr = 'in(category,(toy,food))'
-        rep = {'name': 'in', 'args': ['category', ('toy', 'food')]}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    def test_rfc_nested_operators_example(self):
-        expr = 'or(eq(category,toy),eq(category,food))'
-        rep = {'name': 'or', 'args': [{'name': 'eq', 'args': ['category', 'toy']},
-                                      {'name': 'eq', 'args': ['category', 'food']}]}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    @pytest.mark.parametrize(
-        'exre',
-        [('sort(+foo)', [('+', 'foo')]),
-         ('sort(+price,-rating)', [('+', 'price'), ('-', 'rating')]),
-         ])
-    def test_rfc_sort_examples(self, exre):
-        expr, args = exre
-
-        pd = parse(expr)
-        assert pd == {'name': 'sort', 'args': args}
-
-    def test_rfc_aggregate_example(self):
-        expr = 'aggregate(departmentId,sum(sales))'
-        rep = {'name': 'aggregate', 'args': ['departmentId', {'name': 'sum', 'args': ['sales']}]}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    def test_rfc_comparison_example(self):
-        expr = 'foo=3&(bar=text|bar=string)'
-        rep = {'name': 'and', 'args':
-               [{'name': 'eq', 'args': ['foo', 3]},
-                {'name': 'or', 'args':
-                 [{'name': 'eq', 'args': ['bar', 'text']},
-                  {'name': 'eq', 'args': ['bar', 'string']}],
-                 }
-                ]}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    def test_rfc_typed_value_example(self):
-        expr = 'foo=number:4'
-        rep = {'name': 'eq', 'args': ['foo', 4]}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    def test_syntax_error(self):
-        expr = 'lero===lero'
-        with pytest.raises(RQLSyntaxError):
-            parse(expr)
-
-
-class TestReportedErrors:
-
-    def test_like_with_string_parameter(self):
-        expr = 'like(name,*new jack city*)'
-        rep = {'name': 'like', 'args': ['name', '*new jack city*']}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    def test_like_with_string_encoded_parameter(self):
-        expr = 'like(name,*new%20jack%20city*)'
-        rep = {'name': 'like', 'args': ['name', '*new jack city*']}
-
-        pd = parse(expr)
         assert pd == rep
