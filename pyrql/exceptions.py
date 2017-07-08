@@ -7,3 +7,7 @@ class RQLError(Exception):
 
 class RQLSyntaxError(RQLError):
     pass
+
+
+class RQLQueryError(RQLError):
+    pass

@@ -3,6 +3,7 @@
 from pyrql.exceptions import RQLSyntaxError
 from pyrql.parser import Parser
 from pyrql.unparser import Unparser
+from pyrql.query import Query
 
 
 __title__ = "pyrql"
@@ -15,5 +16,6 @@ parse = Parser().parse
 
 unparse = Unparser().unparse
 
+query = Query().query
 
-__all__ = ["parse", "unparse", "RQLSyntaxError"]
+__all__ = ["parse", "unparse", "query", "RQLSyntaxError"]
