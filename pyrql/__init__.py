@@ -6,7 +6,7 @@ from pyrql.unparser import Unparser
 
 
 __title__ = 'pyrql'
-__version__ = '0.4.0'
+__version__ = '0.4.1'
 __author__ = 'Pedro Werneck'
 __license__ = 'MIT'
 
