@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+from uuid import UUID
 
 import pytest
 
@@ -179,3 +180,15 @@ class TestParser:
                         {'name': 'eq', 'args': ['gender', 'female']}]}
 
         assert pd == rep
+
+    @pytest.mark.parametrize('uuid_str', ['b999897c-c755-42b1-82f2-81cf6867b1c9',
+                                          '887670c3-5fa7-4dcf-a409-e8bf1d17fa5b'])
+    def test_uuid(self, uuid_str):
+        expr = 'uuid=%s' % uuid_str
+        pd = parse(expr)
+
+        rep = {'name': 'eq', 'args': [
+            'uuid', UUID(uuid_str)
+        ]}
+
+        assert rep == pd

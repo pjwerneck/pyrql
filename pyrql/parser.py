@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-
+import uuid
 from datetime import datetime
 
 import pyparsing as pp
@@ -120,6 +120,7 @@ TYPED_DATE = (K_DATE + COLON + common.iso8601_date).setParseAction(_date)
 TYPED_DATETIME = (K_DATETIME + COLON + common.iso8601_datetime).setParseAction(_datetime)
 TYPED_BOOL = (K_BOOL + COLON + (TRUE | FALSE))
 TYPED_EPOCH = (K_EPOCH + COLON + common.number).setParseAction(_epoch)
+TYPED_UUID = common.uuid.setParseAction(pp.tokenMap(uuid.UUID))
 
 TYPED_VALUE = (
     TYPED_EPOCH |
@@ -127,7 +128,8 @@ TYPED_VALUE = (
     TYPED_DATE |
     TYPED_NUMBER |
     TYPED_BOOL |
-    TYPED_STRING)
+    TYPED_STRING |
+    TYPED_UUID)
 
 ARRAY = pp.Forward()
 
