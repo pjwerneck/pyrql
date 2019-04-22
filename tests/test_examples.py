@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from uuid import uuid4
 
 import pytest
 
@@ -124,5 +125,14 @@ class TestJSExamples:
                              ['sort(+price,-rating)'])
     def test_multiple_sort(self, expr):
         rep = {'name': 'sort', 'args': [('+', 'price'), ('-', 'rating')]}
+
+        assert parse(expr) == rep
+
+
+class TestUUID:
+    @pytest.mark.parametrize('uuid', [uuid4().hex for x in range(100)])
+    def test_uuid_query(self, uuid):
+        expr = 'uuid={}'.format(uuid)
+        rep = {'name': 'eq', 'args': ['uuid', uuid]}
 
         assert parse(expr) == rep

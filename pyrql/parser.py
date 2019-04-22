@@ -131,7 +131,9 @@ TYPED_VALUE = (
 
 ARRAY = pp.Forward()
 
-VALUE = TYPED_VALUE | ARRAY | TRUE | FALSE | NULL | NUMBER | STRING
+# using ^ instead of | between NUMBER and STRING to avoid ambiguity
+# when parsing strings starting with numbers
+VALUE = TYPED_VALUE | ARRAY | TRUE | FALSE | NULL | (NUMBER ^ STRING)
 
 PAR_ARRAY = (LPAR + pp.delimitedList(VALUE) + RPAR).setParseAction(_array)
 
@@ -145,8 +147,7 @@ SORT_ARG = ((MINUS | PLUS) + VALUE).setParseAction(lambda e, l, t: tuple(t))
 SORT_ARGARRAY = pp.delimitedList(SORT_ARG).setResultsName('args')
 SORT_CALL = (SORT + LPAR + SORT_ARGARRAY + RPAR).setParseAction(_sort_call)
 
-FUNC_CALL = (NAME.setResultsName('name') + LPAR +
-             pp.Group(pp.Optional(pp.delimitedList(ARGUMENT)))
+FUNC_CALL = (NAME.setResultsName('name') + LPAR + pp.Group(pp.Optional(pp.delimitedList(ARGUMENT)))
              .setResultsName('args') + RPAR).setParseAction(_call_operator)
 
 CALL_OPERATOR <<= (SORT_CALL | FUNC_CALL)

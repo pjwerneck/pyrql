@@ -22,3 +22,10 @@ class TestReportedErrors:
 
         pd = parse(expr)
         assert pd == rep
+
+    def test_string_starting_with_number(self):
+        expr = 'uuid=27f1db1c029e4a428961b85433de25fd'
+        rep = {'name': 'eq', 'args': ['uuid', '27f1db1c029e4a428961b85433de25fd']}
+
+        pd = parse(expr)
+        assert pd == rep
