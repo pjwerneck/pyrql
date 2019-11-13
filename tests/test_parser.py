@@ -40,10 +40,16 @@ class TestParser:
 
         assert pd == {'name': op, 'args': rep}
 
-    def test_equality_operator(self):
-        p1 = parse('lero=0')
-        p2 = parse('eq(lero, 0)')
+    @pytest.mark.parametrize('name, arg', [
+        ('lero', 'lero'),
+        ('foo.bar', 'foo.bar'),
+        ('(foo,bar)', ('foo', 'bar')),
+    ])
+    def test_equality_operator(self, name, arg):
+        p1 = parse('%s=0' % name)
+        p2 = parse('eq(%s, 0)' % name)
         assert p1 == p2
+        assert p1 == {'name': 'eq', 'args': [arg, 0]}
 
     def test_and_operator_pair(self):
         p1 = parse('eq(a,0)&eq(b,1)')

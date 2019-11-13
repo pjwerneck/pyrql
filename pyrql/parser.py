@@ -110,8 +110,6 @@ STRING = pp.Combine(pp.OneOrMore(NCHAR))
 
 NAME = common.identifier
 
-NAME_ARRAY = NAME | (LPAR + pp.delimitedList(NAME) + RPAR).setParseAction(_array)
-
 NUMBER = common.number
 
 TYPED_STRING = (K_STRING + COLON + STRING)
@@ -152,7 +150,7 @@ FUNC_CALL = (NAME.setResultsName('name') + LPAR + pp.Group(pp.Optional(pp.delimi
 
 CALL_OPERATOR <<= (SORT_CALL | FUNC_CALL)
 
-COMPARISON = (NAME_ARRAY + EQUALS + pp.Optional(NAME + EQUALS) + VALUE).setParseAction(_comparison)
+COMPARISON = (VALUE + EQUALS + pp.Optional(NAME + EQUALS) + VALUE).setParseAction(_comparison)
 
 OPERATOR = pp.Forward()
 
