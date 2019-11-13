@@ -93,7 +93,7 @@ The only operator allowed at the query top level is the AND operator, i.e. `&`. 
 {'args': [{'args': ['a', 1], 'name': 'eq'}, {'args': ['b', 2], 'name': 'eq'}], 'name': 'or'}
 ```
 
-The slash syntax for arrays is not implemented and will result in a syntax error. The only valid array syntax is the comma delimited list inside parenthesis:
+The slash syntax for arrays is not implemented yet and will result in a syntax error. The only valid array syntax is the comma delimited list inside parenthesis:
 
 ```
 >>> pyrql.parse('(a,b)=1')
