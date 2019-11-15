@@ -2,13 +2,12 @@
 
 
 class Unparser:
-
     def unparse(self, expr):
-        name = expr.get('name')
+        name = expr.get("name")
 
         args = []
 
-        for a in expr.get('args', []):
+        for a in expr.get("args", []):
             if isinstance(a, dict):
                 arg = self.unparse(a)
 
@@ -20,13 +19,13 @@ class Unparser:
 
             args.append(arg)
 
-        return '{}({})'.format(name, ','.join(map(str, args)))
+        return "{}({})".format(name, ",".join(map(str, args)))
 
     def unparse_tuple(self, arg):
-        prefix = ''
+        prefix = ""
         tokens = []
 
-        if arg[0] in {'+', '-'}:
+        if arg[0] in {"+", "-"}:
             prefix = arg[0]
             arg = arg[1:]
 
@@ -40,4 +39,4 @@ class Unparser:
             return prefix + tokens[0]
 
         else:
-            return prefix + '(' + ','.join(tokens) + ')'
+            return prefix + "(" + ",".join(tokens) + ")"
