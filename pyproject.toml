@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pyrql"
-version = "0.4.3"
+version = "0.4.4"
 description = "RQL parsing"
 authors = ["Pedro Werneck <pjwerneck@gmail.com>"]
 license = "MIT"
