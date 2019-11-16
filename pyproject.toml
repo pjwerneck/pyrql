@@ -11,7 +11,7 @@ pyparsing = "^2.4"
 python-dateutil = "^2.8"
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
+pytest = ">=4.4.1"
 
 [build-system]
 requires = ["poetry>=0.12"]
