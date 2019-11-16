@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "pyrql"
+version = "0.4.3"
+description = "RQL parsing"
+authors = ["Pedro Werneck <pjwerneck@gmail.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^2.7,^3.4"
+pyparsing = "^2.4"
+python-dateutil = "^2.8"
+
+[tool.poetry.dev-dependencies]
+pytest = "^5.2"
+
+[build-system]
+requires = ["poetry>=0.12"]
+build-backend = "poetry.masonry.api"
