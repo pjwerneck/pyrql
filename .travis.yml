@@ -6,6 +6,9 @@ python:
   - 3.6
   - 3.7
   - 3.8
+before_install:
+  - pip install --upgrade pip
+  - pip install poetry
 install:
-  - python setup.py install
+  - poetry install
 script: python -m pytest
