@@ -154,7 +154,6 @@ class TestJSExamples:
     @pytest.mark.parametrize("expr", ["sort(+price,-rating)"])
     def test_multiple_sort(self, expr):
         rep = {"name": "sort", "args": [("+", "price"), ("-", "rating")]}
-
         assert parse(expr) == rep
 
 
