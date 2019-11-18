@@ -1,216 +1,192 @@
 # -*- coding: utf-8 -*-
 
-
 import datetime
 import operator
-from collections import namedtuple, OrderedDict
+from collections import OrderedDict
 from copy import deepcopy
 from urllib.parse import unquote
 
 from .exceptions import RQLQueryError
-from .exceptions import RQLSyntaxError
 from .parser import Parser
 
 
-class Filter:
-    def __init__(self, op, args):
-        self.op = getattr(operator, op)
-        self.key = args[0]
-        self.value = args[1]
-
-        self.row = None
-
-    def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return self.op(self.row[self.key], self.value)
-
-
-class And:
+class Node:
     def __init__(self, *args):
         self.args = args
 
+    def __repr__(self):
+        return "{}({})".format(self.__class__.__name__, self.args)
+
+
+class RowNode(Node):
+    pass
+
+
+class DataNode(Node):
+    pass
+
+
+class Filter(RowNode):
     def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return all([f(self.row) for f in self.args if f is not None])
+        opname, key, value = self.args
+        op = getattr(operator, opname)
+        return op(row[key], value)
 
 
-class Or:
-    def __init__(self, *args):
-        self.args = args
-
+class And(RowNode):
     def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return any([f(self.row) for f in self.args if f is not None])
+        return all([f(row) for f in self.args if f is not None])
 
 
-class In:
-    def __init__(self, attr, value):
-        self.attr = attr
-        self.value = value
-
+class Or(RowNode):
     def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return operator.contains(self.value, self.row[self.attr])
+        return any([f(row) for f in self.args if f is not None])
 
 
-class NotIn:
-    def __init__(self, attr, value):
-        self.attr = attr
-        self.value = value
-
+class In(RowNode):
     def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return operator.not_(operator.contains(self.value, self.row[self.attr]))
+        attr, value = self.args
+        return operator.contains(value, row[attr])
 
 
-class Contains:
-    def __init__(self, attr, value):
-        self.attr = attr
-        self.value = value
-
+class NotIn(RowNode):
     def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return operator.contains(self.row[self.attr], self.value)
+        attr, value = self.args
+        return operator.not_(operator.contains(value, row[attr]))
 
 
-class Excludes:
-    def __init__(self, attr, value):
-        self.attr = attr
-        self.value = value
-
+class Contains(RowNode):
     def __call__(self, row):
-        self.row = row
-        return self
-
-    def __bool__(self):
-        return operator.not_(operator.contains(self.row[self.attr], self.value))
+        attr, value = self.args
+        return operator.contains(row[attr], value)
 
 
-class Min:
-    def __init__(self, attr):
-        self.attr = attr
+class Excludes(RowNode):
+    def __call__(self, row):
+        attr, value = self.args
+        return operator.not_(operator.contains(row[attr], value))
+
+
+class AggregateNode(DataNode):
+    @property
+    def label(self):
+        return self.args[0]
+
+
+class Min(AggregateNode):
+    def __call__(self, data):
+        (attr,) = self.args
+        return min([row[attr] for row in data])
+
+
+class Max(AggregateNode):
+    @property
+    def label(self):
+        return self.args[0]
 
     def __call__(self, data):
-        return min([row[self.attr] for row in data])
+        (attr,) = self.args
+        return max([row[attr] for row in data])
 
 
-class Max:
-    def __init__(self, attr):
-        self.attr = attr
-
+class Sum(AggregateNode):
     def __call__(self, data):
-        return max([row[self.attr] for row in data])
+        (attr,) = self.args
+        return sum([row[attr] for row in data])
 
 
-class Sum:
-    def __init__(self, attr):
-        self.attr = attr
-
+class Mean(AggregateNode):
     def __call__(self, data):
-        return sum([row[self.attr] for row in data])
+        (attr,) = self.args
+        return sum([row[attr] for row in data]) / len(data)
 
 
-class Mean:
-    def __init__(self, attr):
-        self.attr = attr
-
+class Select(DataNode):
     def __call__(self, data):
-        return sum([row[self.attr] for row in data]) / len(data)
+        return [{k: row[k] for k in self.args} for row in data]
 
 
-class Select:
-    def __init__(self, attrs):
-        self.attrs = attrs
-
+class Values(DataNode):
     def __call__(self, data):
-        # apply the select clause
-        return [{k: row[k] for k in self.attrs} for row in data]
+        (attr,) = self.args
+        return [row[attr] for row in data]
 
 
-class Values:
-    def __init__(self, attrs):
-        self.attrs = attrs
-
+class Aggregate(DataNode):
     def __call__(self, data):
-        return [row[self.attrs] for row in data]
-
-
-class Aggregate:
-    def __init__(self, group_by, attrs):
-        self.group_by = group_by[0]
-        self.attrs = attrs
-
-    def __call__(self, data):
+        group_by, attrs = self.args
 
         groups = OrderedDict()
         for row in data:
             try:
-                groups[row[self.group_by]].append(row)
+                groups[row[group_by]].append(row)
             except KeyError:
-                groups[row[self.group_by]] = [row]
+                groups[row[group_by]] = [row]
 
         out = []
-
         for group_key, rows in groups.items():
-            outrow = {}
-            for attr in self.attrs:
-                if isinstance(attr, str):
-                    outrow[attr] = rows[0][attr]
-                else:
-                    outrow[attr.attr] = attr(rows)
+            outrow = {attr.label: attr(rows) for attr in attrs}
+            outrow[group_by] = group_key
 
             out.append(outrow)
 
         return out
 
 
+class Limit(DataNode):
+    def __call__(self, data):
+        limit, offset = self.args
+
+        if offset:
+            data = data[offset:]
+
+        if limit:
+            data = data[:limit]
+
+        return data
 
 
+class Count(DataNode):
+    label = "count"
+
+    def __call__(self, data):
+        return len(data)
 
 
-        import pdb; pdb.set_trace()
+class Distinct(DataNode):
+    def __call__(self, data):
+        new_data = []
+
+        for row in data:
+            if row not in new_data:
+                new_data.append(row)
+        return new_data
 
 
+class Sort(DataNode):
+    def __call__(self, data):
+        # sort least significant first
+        for prefix, attr in reversed(self.args):
+            data.sort(key=operator.itemgetter(attr), reverse=prefix == "-")
+
+        return data
 
 
+class One(DataNode):
+    def __call__(self, data):
+        if len(data) > 1:
+            raise ValueError("Multiple results found for 'one'")
 
-def Count(data):
-    return len(data)
+        if len(data) == 0:
+            raise ValueError("No results found for 'one'")
 
-
-def One(data):
-    if len(data) > 1:
-        raise ValueError("Multiple results found for 'one'")
-
-    if len(data) == 0:
-        raise ValueError("No results found for 'one'")
-
-    return data
+        return data
 
 
 class Query:
 
     _rql_max_limit = None
     _rql_default_limit = None
-    _rql_auto_scalar = False
 
     def query(self, expr, data):
         if not expr:
@@ -223,59 +199,43 @@ class Query:
 
         data = deepcopy(data)
 
-        self._rql_select_stack = []
-        self._rql_where_clause = None
+        self._rql_filter_clause = None
         self._rql_sort_clause = None
-        self._rql_limit_stack = []
-        self._rql_offset_stack = []
-        self._rql_select_clause = []
-        self._rql_values_clause = None
-        self._rql_scalar_clause = None
-        self._rql_where_clause = None
-        self._rql_order_by_clause = None
-        self._rql_one_clause = None
+        self._rql_limit_clause = None
+        self._rql_results_clause = None
         self._rql_distinct_clause = None
-        self._rql_group_by_clause = None
-        self._rql_joins = []
+
+        # set default limit
+        if self._rql_default_limit:
+            self._rql_limit_clause = Limit(self._rql_default_limit)
 
         self._rql_walk(self.rql_parsed)
 
-        # first, let's filter the data
-        if self._rql_where_clause is not None:
-            data = [row for row in data if bool(self._rql_where_clause.__call__(row))]
+        # filter the data
+        if self._rql_filter_clause is not None:
+            data = [row for row in data if self._rql_filter_clause(row)]
 
-        if self._rql_scalar_clause:
-            data = self._rql_scalar_clause(data)
+        # generate results
+        if self._rql_results_clause:
+            data = self._rql_results_clause(data)
 
-        # then order the data
+        # order the data
         if self._rql_sort_clause is not None:
-            # sort by the least significant first.
-            for op in reversed(self._rql_sort_clause):
-                data.sort(**op)
+            data = self._rql_sort_clause(data)
 
         # apply distinct clause
         if self._rql_distinct_clause:
-            new_data = []
-            for row in data:
-                if row not in new_data:
-                    new_data.append(row)
-            data = new_data
+            data = self._rql_distinct_clause(data)
 
-        # apply any offset
-        if self._rql_offset_stack:
-            offset = self._rql_offset_stack[-1]
-            data = data[offset:]
-
-        # then apply any limit
-        if self._rql_limit_stack:
-            limit = self._rql_limit_stack[-1]
-            data = data[:limit]
+        # apply any limit and offset
+        if self._rql_limit_clause:
+            data = self._rql_limit_clause(data)
 
         return data
 
     def _rql_walk(self, node):
         if node:
-            self._rql_where_clause = self._rql_apply(node)
+            self._rql_filter_clause = self._rql_apply(node)
 
     def _rql_apply(self, node):
         if isinstance(node, dict):
@@ -306,7 +266,7 @@ class Query:
         attr = self._rql_attr(attr)
         value = self._rql_value(value, attr)
 
-        return Filter(name, (attr, value))
+        return Filter(name, attr, value)
 
     def _rql_value(self, value, attr=None):
         if isinstance(value, dict):
@@ -352,20 +312,20 @@ class Query:
     def _rql_limit(self, args):
         args = [self._rql_value(v) for v in args]
 
-        self._rql_limit_stack.append(min(args[0], self._rql_max_limit or float("inf")))
+        limit = min(args[0], self._rql_max_limit or float("inf"))
 
-        if len(args) == 2:
-            self._rql_offset_stack.append(args[1])
+        try:
+            offset = args[1]
+        except IndexError:
+            offset = 0
+
+        self._rql_limit_clause = Limit(limit, offset)
 
     def _rql_sort(self, args):
-        clause = []
-
         args = [("+", v) if isinstance(v, str) else v for v in args]
 
-        for prefix, attr in args:
-            clause.append({"key": operator.itemgetter(attr), "reverse": prefix == "-"})
-
-        self._rql_sort_clause = clause
+        args = [(attr, prefix) for (attr, prefix) in args]
+        self._rql_sort_clause = Sort(*args)
 
     def _rql_contains(self, args):
         attr, value = args
@@ -383,36 +343,36 @@ class Query:
 
     def _rql_select(self, args):
         attrs = [self._rql_attr(attr) for attr in args]
-        self._rql_scalar_clause = Select(attrs)
+        self._rql_results_clause = Select(*attrs)
 
     def _rql_values(self, args):
         (attr,) = args
         attr = self._rql_attr(attr)
-        self._rql_scalar_clause = Values(attr)
+        self._rql_results_clause = Values(attr)
 
     def _rql_distinct(self, args):
-        self._rql_distinct_clause = True
+        self._rql_distinct_clause = Distinct()
 
     def _rql_count(self, args):
-        self._rql_scalar_clause = Count
+        self._rql_results_clause = Count()
 
     def _rql_min(self, args):
-        self._rql_scalar_clause = Min(args[0])
+        self._rql_results_clause = Min(args[0])
 
     def _rql_max(self, args):
-        self._rql_scalar_clause = Max(args[0])
+        self._rql_results_clause = Max(args[0])
 
     def _rql_sum(self, args):
-        self._rql_scalar_clause = Sum(args[0])
+        self._rql_results_clause = Sum(args[0])
 
     def _rql_mean(self, args):
-        self._rql_scalar_clause = Mean(args[0])
+        self._rql_results_clause = Mean(args[0])
 
     def _rql_first(self, args):
-        self._rql_limit_stack.append(1)
+        self._rql_limit_clause = Limit(1, 0)
 
     def _rql_one(self, args):
-        self._rql_scalar_clause = One
+        self._rql_results_clause = One()
 
     def _rql_time(self, args):
         return datetime.time(*args)
@@ -424,19 +384,17 @@ class Query:
         return datetime.datetime(*args)
 
     def _rql_aggregate(self, args):
-        funcs = {'sum': Sum, 'min': Min, 'max': Max, 'mean': Mean, 'count': Count}
+        funcs = {"sum": Sum, "min": Min, "max": Max, "mean": Mean, "count": Count}
 
-        attrs = []
+        group_by = args[0]
+        fields = args[1:]
+
         aggrs = []
 
-        for x in args:
-            if isinstance(x, dict):
-                agg_func = funcs[x["name"]]
-                agg_attr = self._rql_attr(x["args"][0])
+        for f in fields:
+            agg_func = funcs[f["name"]]
+            agg_attr = self._rql_attr(*f["args"]) if f["args"] else None
 
-                aggrs.append(agg_func(agg_attr))
+            aggrs.append(agg_func(agg_attr))
 
-            else:
-                attrs.append(self._rql_attr(x))
-
-        self._rql_scalar_clause = Aggregate(attrs, attrs + aggrs)
+        self._rql_results_clause = Aggregate(group_by, aggrs)

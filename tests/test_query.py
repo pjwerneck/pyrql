@@ -44,14 +44,14 @@ class TestBase:
         ],
     )
     def test_filter_operators(self, op, tv, fv):
-        f = Filter(op, ["id", 10])
+        f = Filter(op, "id", 10)
 
         assert f({"id": tv})
         assert not f({"id": fv})
 
     def test_and_operator(self):
-        a = Filter("eq", ["a", 10])
-        b = Filter("eq", ["b", "xyz"])
+        a = Filter("eq", "a", 10)
+        b = Filter("eq", "b", "xyz")
 
         f = And(a, b)
 
@@ -60,8 +60,8 @@ class TestBase:
         assert not f({"a": 10, "b": None})
 
     def test_or_operator(self):
-        a = Filter("eq", ["a", 10])
-        b = Filter("eq", ["b", "xyz"])
+        a = Filter("eq", "a", 10)
+        b = Filter("eq", "b", "xyz")
 
         f = Or(a, b)
 
@@ -71,9 +71,9 @@ class TestBase:
         assert not f({"a": 0, "b": "x"})
 
     def test_nested_operators(self):
-        a = Filter("eq", ["a", 10])
-        b = Filter("eq", ["b", "xyz"])
-        c = Filter("eq", ["c", 10])
+        a = Filter("eq", "a", 10)
+        b = Filter("eq", "b", "xyz")
+        c = Filter("eq", "c", 10)
 
         f = Or(And(a, b), c)
 
@@ -208,53 +208,53 @@ class TestQuery:
 
     def test_count2(self, data):
         rep = query("gt(balance,2000)&count()", data)
-        assert rep == len([row for row in data if row['balance'] > 2000])
+        assert rep == len([row for row in data if row["balance"] > 2000])
 
     def test_in_operator(self, data):
         res = query("in(state,(FL,TX))", data)
-        exp = [row for row in data if row['state'] in {'FL', 'TX'}]
+        exp = [row for row in data if row["state"] in {"FL", "TX"}]
         assert res
         assert res == exp
 
     def test_out_operator(self, data):
         res = query("out(state,(FL,TX))", data)
-        exp = [row for row in data if row['state'] not in {'FL', 'TX'}]
+        exp = [row for row in data if row["state"] not in {"FL", "TX"}]
         assert res
         assert res == exp
 
     def test_contains_string(self, data):
         res = query("contains(email,besto.com)", data)
-        exp = [row for row in data if 'besto.com' in row['email']]
+        exp = [row for row in data if "besto.com" in row["email"]]
         assert res
         assert res == exp
 
     def test_excludes_string(self, data):
         res = query("excludes(email,besto.com)", data)
-        exp = [row for row in data if 'besto.com' not in row['email']]
+        exp = [row for row in data if "besto.com" not in row["email"]]
         assert res
         assert res == exp
 
     def test_contains_array(self, data):
         res = query("contains(tags,aliqua)", data)
-        exp = [row for row in data if 'aliqua' in row['tags']]
+        exp = [row for row in data if "aliqua" in row["tags"]]
         assert res
         assert res == exp
 
     def test_excludes_array(self, data):
         res = query("excludes(tags,aliqua)", data)
-        exp = [row for row in data if 'aliqua' not in row['tags']]
+        exp = [row for row in data if "aliqua" not in row["tags"]]
         assert res
         assert res == exp
 
     def test_select(self, data):
         res = query("select(index,state)", data)
-        exp = [{'index': row['index'], 'state': row['state']} for row in data]
+        exp = [{"index": row["index"], "state": row["state"]} for row in data]
         assert res
         assert res == exp
 
     def test_values(self, data):
         res = query("values(state)", data)
-        exp = [row['state'] for row in data]
+        exp = [row["state"] for row in data]
         assert res
         assert res == exp
 
@@ -265,15 +265,18 @@ class TestQuery:
         balances = []
 
         for row in data:
-            if row['state'] not in states:
-                states.append(row['state'])
-                balances.append(row['balance'])
+            if row["state"] not in states:
+                states.append(row["state"])
+                balances.append(row["balance"])
 
             else:
-                i = states.index(row['state'])
-                balances[i] += row['balance']
+                i = states.index(row["state"])
+                balances[i] += row["balance"]
 
-        exp = [{'state': state, 'balance': balance} for (state, balance) in zip(states, balances)]
+        exp = [
+            {"state": state, "balance": balance}
+            for (state, balance) in zip(states, balances)
+        ]
 
         assert res
         assert res == exp
@@ -285,18 +288,21 @@ class TestQuery:
         balances = []
 
         for row in data:
-            if not row['isActive']:
+            if not row["isActive"]:
                 continue
 
-            if row['state'] not in states:
-                states.append(row['state'])
-                balances.append(row['balance'])
+            if row["state"] not in states:
+                states.append(row["state"])
+                balances.append(row["balance"])
 
             else:
-                i = states.index(row['state'])
-                balances[i] += row['balance']
+                i = states.index(row["state"])
+                balances[i] += row["balance"]
 
-        exp = [{'state': state, 'balance': balance} for (state, balance) in zip(states, balances)]
+        exp = [
+            {"state": state, "balance": balance}
+            for (state, balance) in zip(states, balances)
+        ]
 
         assert res
         assert res == exp
@@ -308,19 +314,69 @@ class TestQuery:
         balances = []
 
         for row in data:
-            if not row['isActive']:
+            if not row["isActive"]:
                 continue
 
-            if row['state'] not in states:
-                states.append(row['state'])
-                balances.append(row['balance'])
+            if row["state"] not in states:
+                states.append(row["state"])
+                balances.append(row["balance"])
 
             else:
-                i = states.index(row['state'])
-                balances[i] += row['balance']
+                i = states.index(row["state"])
+                balances[i] += row["balance"]
 
-        exp = [{'state': state, 'balance': balance} for (state, balance) in zip(states, balances)]
-        exp.sort(key=operator.itemgetter('balance'))
+        exp = [
+            {"state": state, "balance": balance}
+            for (state, balance) in zip(states, balances)
+        ]
+        exp.sort(key=operator.itemgetter("balance"))
+
+        assert res
+        assert res == exp
+
+    def test_aggregate_multiple_with_filter_and_sort(self, data):
+        res = query(
+            "aggregate(state,sum(balance),min(latitude),max(longitude),count())&isActive=true&sort(balance)",
+            data,
+        )
+
+        states = []
+        balances = []
+        latitudes = []
+        longitudes = []
+        counts = []
+
+        for row in data:
+            if not row["isActive"]:
+                continue
+
+            if row["state"] not in states:
+                states.append(row["state"])
+                balances.append(row["balance"])
+                latitudes.append(row["latitude"])
+                longitudes.append(row["longitude"])
+                counts.append(1)
+
+            else:
+                i = states.index(row["state"])
+                balances[i] += row["balance"]
+                latitudes[i] = min(latitudes[i], row["latitude"])
+                longitudes[i] = max(longitudes[i], row["longitude"])
+                counts[i] += 1
+
+        exp = [
+            {
+                "state": state,
+                "balance": balance,
+                "latitude": latitude,
+                "longitude": longitude,
+                "count": count,
+            }
+            for (state, balance, latitude, longitude, count) in zip(
+                states, balances, latitudes, longitudes, counts
+            )
+        ]
+        exp.sort(key=operator.itemgetter("balance"))
 
         assert res
         assert res == exp
