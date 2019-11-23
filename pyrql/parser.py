@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from decimal import Decimal
+from uuid import UUID
 
 import pyparsing as pp
 from dateutil.parser import parse as dateparse
@@ -8,7 +10,6 @@ from pyparsing import pyparsing_common as common
 from six.moves import urllib
 
 from .exceptions import RQLSyntaxError
-
 
 # autoconvert:
 # numbers
@@ -22,6 +23,8 @@ from .exceptions import RQLSyntaxError
 # datetime
 # boolean
 # string
+# uuid
+# decimal
 
 
 def _sort_call(expr, loc, toks):
@@ -79,6 +82,14 @@ def _epoch(expr, loc, toks):
     return datetime.utcfromtimestamp(toks[0])
 
 
+def _decimal(expr, loc, toks):
+    return Decimal(toks[0])
+
+
+def _uuid(expr, loc, toks):
+    return UUID(hex=toks[0])
+
+
 TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))
 FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))
 NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))
@@ -93,6 +104,8 @@ K_DATE = pp.Keyword("date").suppress()
 K_DATETIME = pp.Keyword("datetime").suppress()
 K_BOOL = pp.Keyword("boolean").suppress()
 K_EPOCH = pp.Keyword("epoch").suppress()
+K_UUID = pp.Keyword("uuid").suppress()
+K_DECIMAL = pp.Keyword("decimal").suppress()
 
 # grammar
 PLUS = pp.Literal("+")
@@ -122,9 +135,18 @@ TYPED_DATETIME = (K_DATETIME + COLON + common.iso8601_datetime).setParseAction(
 )
 TYPED_BOOL = K_BOOL + COLON + (TRUE | FALSE)
 TYPED_EPOCH = (K_EPOCH + COLON + common.number).setParseAction(_epoch)
+TYPED_UUID = (K_UUID + COLON + STRING).setParseAction(_uuid)
+TYPED_DECIMAL = (K_DECIMAL + COLON + STRING).setParseAction(_decimal)
 
 TYPED_VALUE = (
-    TYPED_EPOCH | TYPED_DATETIME | TYPED_DATE | TYPED_NUMBER | TYPED_BOOL | TYPED_STRING
+    TYPED_DECIMAL
+    | TYPED_UUID
+    | TYPED_EPOCH
+    | TYPED_DATETIME
+    | TYPED_DATE
+    | TYPED_NUMBER
+    | TYPED_BOOL
+    | TYPED_STRING
 )
 
 ARRAY = pp.Forward()

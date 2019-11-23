@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
 
 import datetime
+from decimal import Decimal
+from uuid import UUID
 
 import pytest
 
 from pyrql import parse
 from pyrql import unparse
-
 
 CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
 
@@ -25,6 +26,29 @@ class TestParser:
     def test_autoconverted_values(self, expr, args):
         pd = parse(expr)
         assert pd == {"name": "a", "args": args}
+
+    @pytest.mark.parametrize(
+        "expr, args",
+        [
+            ("a(decimal:0.1)", Decimal("0.1")),
+            (
+                "a(uuid:ff27483cee084b27922daab2de4b9849)",
+                UUID("ff27483cee084b27922daab2de4b9849"),
+            ),
+            ("a(epoch:1234567890)", datetime.datetime(2009, 2, 13, 23, 31, 30)),
+            (
+                "a(datetime:2009-02-13 23:31:30)",
+                datetime.datetime(2009, 2, 13, 23, 31, 30),
+            ),
+            ("a(date:2009-02-13)", datetime.date(2009, 2, 13)),
+            ("a(number:3.14)", 3.14),
+            ("a(boolean:true)", True),
+            ("a(string:123)", "123"),
+        ],
+    )
+    def test_explicitly_converted_values(self, expr, args):
+        pd = parse(expr)
+        assert pd == {"name": "a", "args": [args]}
 
     @pytest.mark.parametrize("op", CMP_OPS)
     @pytest.mark.parametrize(

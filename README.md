@@ -37,6 +37,8 @@ The following types are available:
 - epoch
 - date
 - datetime
+- uuid
+- decimal
 
 Numbers, booleans and null are converted automatically to the corresponding Python types. Numbers are converted to float or integer accordingly:
 
@@ -60,7 +62,7 @@ Booleans and null are converted to booleans and None:
 {'name': 'eq', 'args': ['a', None]}
 ```
 
-Types can be explicitly specified using a colon:
+Types can be used explicitly in the form `type:value`:
 
 ```
 >>> pyrql.parse('a=string:1')
