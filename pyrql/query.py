@@ -188,7 +188,10 @@ class Query:
     _rql_max_limit = None
     _rql_default_limit = None
 
-    def query(self, expr, data):
+    def __init__(self, data):
+        self.data = deepcopy(data)
+
+    def query(self, expr):
         if not expr:
             self.rql_parsed = None
             self.rql_expr = ""
@@ -197,13 +200,16 @@ class Query:
             self.rql_expr = expr = unquote(expr)
             self.rql_parsed = Parser().parse(expr)
 
-        data = deepcopy(data)
-
         self._rql_filter_clause = None
         self._rql_sort_clause = None
         self._rql_limit_clause = None
         self._rql_results_clause = None
         self._rql_distinct_clause = None
+
+        return self
+
+    def all(self):
+        data = self.data
 
         # set default limit
         if self._rql_default_limit:

@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 
-# -*- coding: utf-8 -*-
-
 import datetime
 
 import pytest
@@ -13,26 +11,23 @@ CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
 
 
 class TestTokens:
-    @pytest.mark.parametrize("exre", [("%20", " ")])
-    def test_PCT_ENCODED(self, exre):
-        expr, rep = exre
+    @pytest.mark.parametrize("expr, rep", [("%20", " ")])
+    def test_PCT_ENCODED(self, expr, rep):
         pd = pm.PCT_ENCODED.parseString(expr)
         assert pd[0] == rep
 
-    @pytest.mark.parametrize("exre", [("%20", " "), ("a", "a"), ("1", "1")])
-    def test_NCHAR(self, exre):
-        expr, rep = exre
+    @pytest.mark.parametrize("expr, rep", [("%20", " "), ("a", "a"), ("1", "1")])
+    def test_NCHAR(self, expr, rep):
         pd = pm.NCHAR.parseString(expr)
         assert pd[0] == rep
 
-    @pytest.mark.parametrize("exre", [("ab", "ab"), ("abc", "abc")])
-    def test_NAME(self, exre):
-        expr, rep = exre
+    @pytest.mark.parametrize("expr, rep", [("ab", "ab"), ("abc", "abc")])
+    def test_NAME(self, expr, rep):
         pd = pm.NAME.parseString(expr)
         assert pd[0] == rep
 
     @pytest.mark.parametrize(
-        "exre",
+        "expr, rep",
         [
             ("123", 123),
             ("abc", "abc"),
@@ -42,14 +37,12 @@ class TestTokens:
             ("null", None),
         ],
     )
-    def test_VALUE(self, exre):
-        expr, rep = exre
-
+    def test_VALUE(self, expr, rep):
         pd = pm.VALUE.parseString(expr)
         assert pd[0] == rep
 
     @pytest.mark.parametrize(
-        "exre",
+        "expr, rep",
         [
             ("string:3", "3"),
             ("number:3", 3),
@@ -60,14 +53,12 @@ class TestTokens:
             ("epoch:1346201641.0", datetime.datetime(2012, 8, 29, 0, 54, 1)),
         ],
     )
-    def test_TYPED_VALUE(self, exre):
-        expr, rep = exre
-
+    def test_TYPED_VALUE(self, expr, rep):
         pd = pm.TYPED_VALUE.parseString(expr)
         assert pd[0] == rep
 
     @pytest.mark.parametrize(
-        "exre",
+        "expr, rep",
         [
             (
                 "(123,string:123,date:2017-01-01)",
@@ -76,9 +67,7 @@ class TestTokens:
             ("(1,(2, 3, (4, 5)))", (1, (2, 3, (4, 5)))),
         ],
     )
-    def test_ARRAY(self, exre):
-        expr, rep = exre
-
+    def test_ARRAY(self, expr, rep):
         pd = pm.ARRAY.parseString(expr)
         assert pd[0] == rep
 
@@ -168,7 +157,7 @@ class TestTokens:
 
     @pytest.mark.parametrize("op", CMP_OPS)
     @pytest.mark.parametrize(
-        "pair",
+        "expr, args",
         [
             ("a=%s=1", ["a", 1]),
             ("a=%s=xyz", ["a", "xyz"]),
@@ -176,9 +165,7 @@ class TestTokens:
             ("a=%s=date:2017-01-01", ["a", datetime.date(2017, 1, 1)]),
         ],
     )
-    def test_OPERATOR_fiql_expression(self, op, pair):
-        expr, args = pair
-
+    def test_OPERATOR_fiql_expression(self, op, expr, args):
         pd = pm.OPERATOR.parseString(expr % op)
         assert pd[0] == {"name": op, "args": args}
 

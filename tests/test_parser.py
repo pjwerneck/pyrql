@@ -13,7 +13,7 @@ CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
 
 class TestParser:
     @pytest.mark.parametrize(
-        "exre",
+        "expr, args",
         [
             ("a(1)", [1]),
             ("a(3.14)", [3.14]),
@@ -22,15 +22,13 @@ class TestParser:
             ("a(null)", [None]),
         ],
     )
-    def test_autoconverted_values(self, exre):
-        expr, args = exre
-
+    def test_autoconverted_values(self, expr, args):
         pd = parse(expr)
         assert pd == {"name": "a", "args": args}
 
     @pytest.mark.parametrize("op", CMP_OPS)
     @pytest.mark.parametrize(
-        "exre",
+        "expr, rep",
         [
             ("%s(a,1)", ["a", 1]),
             ("%s(a,xyz)", ["a", "xyz"]),
@@ -38,9 +36,7 @@ class TestParser:
             ("%s(a,date:2017-01-01)", ["a", datetime.date(2017, 1, 1)]),
         ],
     )
-    def test_op_calls(self, op, exre):
-        expr, rep = exre
-
+    def test_op_calls(self, op, expr, rep):
         pd = parse(expr % op)
 
         assert pd == {"name": op, "args": rep}
@@ -120,15 +116,14 @@ class TestParser:
         assert unparse(pd) == expr
 
     @pytest.mark.parametrize(
-        "exre",
+        "expr, args",
         [
             ("sort(+lero)", [("+", "lero")]),
             ("sort(+foo,-bar)", [("+", "foo"), ("-", "bar")]),
             ("sort(+(foo,bar),-lero)", [("+", ("foo", "bar")), ("-", "lero")]),
         ],
     )
-    def test_sort_function(self, exre):
-        expr, args = exre
+    def test_sort_function(self, expr, args):
         rep = {"name": "sort", "args": args}
 
         pd = parse(expr)

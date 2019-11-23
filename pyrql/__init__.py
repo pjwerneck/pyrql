@@ -16,6 +16,4 @@ parse = Parser().parse
 
 unparse = Unparser().unparse
 
-query = Query().query
-
-__all__ = ["parse", "unparse", "query", "RQLSyntaxError"]
+__all__ = ["parse", "unparse", "Query", "RQLSyntaxError"]
