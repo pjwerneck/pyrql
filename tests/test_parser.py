@@ -21,6 +21,7 @@ class TestParser:
             ("a(true)", [True]),
             ("a(false)", [False]),
             ("a(null)", [None]),
+            ("a(μéfoo中文кириллица)", ["μéfoo中文кириллица"])
         ],
     )
     def test_autoconverted_values(self, expr, args):
