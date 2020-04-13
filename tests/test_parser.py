@@ -241,3 +241,15 @@ class TestParser:
         }
 
         assert pd == rep
+
+    def test_value_with_reserved_character(self):
+        pd = parse("email=user@example.com")
+
+        rep = {
+            "name": "eq",
+            "args": [
+                "email", "user@example.com"
+            ]
+        }
+
+        assert pd == rep
