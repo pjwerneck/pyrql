@@ -1,4 +1,3 @@
-HELOLOLO
 # pyrql
 
 [![Build Status](https://travis-ci.org/pjwerneck/pyrql.svg?branch=develop)](https://travis-ci.org/pjwerneck/pyrql)
