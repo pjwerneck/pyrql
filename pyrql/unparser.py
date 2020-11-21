@@ -1,5 +1,9 @@
 # -*- coding: utf-8 -*-
 
+import datetime
+import decimal
+import uuid
+
 
 class Unparser:
     def unparse(self, expr):
@@ -15,7 +19,7 @@ class Unparser:
                 arg = self.unparse_tuple(a)
 
             else:
-                arg = a
+                arg = self.unparse_token(a)
 
             args.append(arg)
 
@@ -33,10 +37,32 @@ class Unparser:
             if isinstance(a, tuple):
                 tokens.append(self.unparse_tuple(a))
             else:
-                tokens.append(a)
+                tokens.append(self.unparse_token(a))
 
-        if len(tokens) == 1:
-            return prefix + tokens[0]
+        return prefix + "(" + ",".join(tokens) + ")"
 
-        else:
-            return prefix + "(" + ",".join(tokens) + ")"
+    def unparse_token(self, arg):
+        if arg is None:
+            return "null"
+
+        elif isinstance(arg, bool):
+            return str(arg).lower()
+
+        elif isinstance(arg, decimal.Decimal):
+            return "decimal:%s" % arg
+
+        elif isinstance(arg, float):
+            # repr(float) returns the shortest decimal representation
+            # for the same binary float
+            return repr(arg)
+
+        elif isinstance(arg, uuid.UUID):
+            return "uuid:%s" % arg.hex
+
+        elif isinstance(arg, datetime.datetime):
+            return "datetime:%s" % arg.isoformat()
+
+        elif isinstance(arg, datetime.date):
+            return "date:%s" % arg.isoformat()
+
+        return str(arg)

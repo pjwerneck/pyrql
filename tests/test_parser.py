@@ -21,7 +21,7 @@ class TestParser:
             ("a(true)", [True]),
             ("a(false)", [False]),
             ("a(null)", [None]),
-            ("a(μéfoo中文кириллица)", ["μéfoo中文кириллица"])
+            ("a(μéfoo中文кириллица)", ["μéfoo中文кириллица"]),
         ],
     )
     def test_autoconverted_values(self, expr, args):
@@ -245,11 +245,6 @@ class TestParser:
     def test_value_with_reserved_character(self):
         pd = parse("email=user@example.com")
 
-        rep = {
-            "name": "eq",
-            "args": [
-                "email", "user@example.com"
-            ]
-        }
+        rep = {"name": "eq", "args": ["email", "user@example.com"]}
 
         assert pd == rep

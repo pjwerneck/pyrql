@@ -2,7 +2,7 @@
 
 
 from pyrql import parse
-
+from pyrql import unparse
 
 CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
 
@@ -28,3 +28,37 @@ class TestReportedErrors:
 
         pd = parse(expr)
         assert pd == rep
+
+    def test_unparser_error_1(self):
+        expr = r"eq(accountId,(123456789))&eq(yyyy,(2020))&eq(mm,(10))"
+        rep = {
+            "name": "and",
+            "args": [
+                {"name": "eq", "args": ["accountId", (123456789,)]},
+                {"name": "eq", "args": ["yyyy", (2020,)]},
+                {"name": "eq", "args": ["mm", (10,)]},
+            ],
+        }
+
+        pd = parse(expr)
+        upd = parse(unparse(pd))
+
+        assert pd == rep
+        assert upd == pd
+
+    def test_unparser_error_4(self):
+        expr = r"and(eq(accountId,(123456789)), eq(yyyy,(2020)), eq(mm,(10)))"
+        rep = {
+            "name": "and",
+            "args": [
+                {"name": "eq", "args": ["accountId", (123456789,)]},
+                {"name": "eq", "args": ["yyyy", (2020,)]},
+                {"name": "eq", "args": ["mm", (10,)]},
+            ],
+        }
+
+        pd = parse(expr)
+        upd = parse(unparse(pd))
+
+        assert pd == rep
+        assert upd == pd
