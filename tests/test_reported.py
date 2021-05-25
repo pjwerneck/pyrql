@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import pytest
 
+from pyrql import RQLSyntaxError
 from pyrql import parse
 from pyrql import unparse
 
@@ -62,3 +64,16 @@ class TestReportedErrors:
 
         assert pd == rep
         assert upd == pd
+
+    def test_unbalanced_parenthesis_11(self):
+        parsed = parse(r"in(foo,(foo,bar))&sort(+foo)&eq(userid,user)")
+        assert parsed == {'name': 'and', 'args': [
+            {'name': 'in', 'args': ['foo', ('foo', 'bar')]},
+            {'name': 'sort', 'args': [('+', 'foo')]},
+            {'name': 'eq', 'args': ['userid', 'user']}
+        ]}
+
+        with pytest.raises(RQLSyntaxError) as exc:
+            parse(r"in(foo,(foo,bar))&sort(+foo))&eq(userid,user)")
+
+        assert exc.value.args[2] == "Expected end of text"

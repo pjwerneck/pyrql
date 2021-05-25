@@ -6,6 +6,7 @@ from uuid import UUID
 
 import pytest
 
+from pyrql import RQLSyntaxError
 from pyrql import parse
 from pyrql import unparse
 
@@ -241,6 +242,25 @@ class TestParser:
         }
 
         assert pd == rep
+
+    def test_unbalanced_opening_parenthesis(self):
+        with pytest.raises(RQLSyntaxError) as exc:
+            parse("((state=Florida|state=Alabama)&gender=female")
+        assert exc.value.args[2] == 'Expected ")"'
+
+    @pytest.mark.parametrize(
+        "expr,error",
+        [
+            ("(state=Florida|state=Alabama))&gender=female", "Expected end of text"),
+            ("()state=Florida|state=Alabama)&gender=female", 'Expected "("'),
+            (")(state=Florida|state=Alabama)&gender=female", 'Expected "("'),
+        ],
+    )
+    def test_unbalanced_closing_parenthesis(self, expr, error):
+        with pytest.raises(RQLSyntaxError) as exc:
+            parse(expr)
+
+        assert exc.value.args[2] == error
 
     def test_value_with_reserved_character(self):
         pd = parse("email=user@example.com")

@@ -199,7 +199,7 @@ QUERY = pp.delimitedList(AND).setParseAction(_and)
 class Parser:
     def parse(self, expr):
         try:
-            result = QUERY.parseString(expr)
+            result = QUERY.parseString(expr, parseAll=True)
         except pp.ParseException as exc:
             raise RQLSyntaxError(*exc.args)
 
