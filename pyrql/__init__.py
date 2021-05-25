@@ -7,7 +7,7 @@ from pyrql.query import Query
 
 
 __title__ = "pyrql"
-__version__ = "0.6.1"
+__version__ = "0.6.2"
 __author__ = "Pedro Werneck"
 __license__ = "MIT"
 
