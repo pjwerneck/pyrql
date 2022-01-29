@@ -20,13 +20,18 @@ def data():
         data_ = json.load(f)
 
     for row in data_:
+        # add decimal field for aggregation testing
         row["balance"] = Decimal(row["balance"][1:].replace(",", ""))
+        # add datetime fields
         row["registered"] = datetime.datetime.strptime(
             row["registered"][::-1].replace(":", "", 1)[::-1], "%Y-%m-%dT%H:%M:%S %z"
         )
         row["birthdate"] = datetime.datetime.strptime(
             row["birthdate"], "%Y-%m-%d"
         ).date()
+
+        # convert coordinates to a nested dict, for nested attribute operations
+        row['position'] = {"latitude": row.pop("latitude"), "longitude": row.pop("longitude")}
 
     return data_
 
@@ -113,12 +118,12 @@ class TestQuery:
 
         rep = (
             Query(data)
-            .query("and({op1}(index,{v1}),{op2}(latitude,{v2}))".format(**locals()))
+            .query("and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals()))
             .all()
         )
 
         exp = [
-            row for row in data if opc1(row["index"], v1) and opc2(row["latitude"], v2)
+            row for row in data if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)
         ]
 
         assert exp == rep
@@ -133,12 +138,12 @@ class TestQuery:
 
         rep = (
             Query(data)
-            .query("or({op1}(index,{v1}),{op2}(latitude,{v2}))".format(**locals()))
+            .query("or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals()))
             .all()
         )
 
         exp = [
-            row for row in data if opc1(row["index"], v1) or opc2(row["latitude"], v2)
+            row for row in data if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)
         ]
 
         assert exp == rep
@@ -346,7 +351,8 @@ class TestQuery:
         res = (
             Query(data)
             .query(
-                "aggregate(state,sum(balance),min(latitude),max(longitude),count())&isActive=true&sort(balance)",
+                "aggregate(state,sum(balance),min(position.latitude),max(position.longitude),count())&"
+                "isActive=true&sort(balance)",
             )
             .all()
         )
@@ -364,23 +370,23 @@ class TestQuery:
             if row["state"] not in states:
                 states.append(row["state"])
                 balances.append(row["balance"])
-                latitudes.append(row["latitude"])
-                longitudes.append(row["longitude"])
+                latitudes.append(row["position"]["latitude"])
+                longitudes.append(row["position"]["longitude"])
                 counts.append(1)
 
             else:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
-                latitudes[i] = min(latitudes[i], row["latitude"])
-                longitudes[i] = max(longitudes[i], row["longitude"])
+                latitudes[i] = min(latitudes[i], row["position"]["latitude"])
+                longitudes[i] = max(longitudes[i], row["position"]["longitude"])
                 counts[i] += 1
 
         exp = [
             {
                 "state": state,
                 "balance": balance,
-                "latitude": latitude,
-                "longitude": longitude,
+                "position.latitude": latitude,
+                "position.longitude": longitude,
                 "count": count,
             }
             for (state, balance, latitude, longitude, count) in zip(

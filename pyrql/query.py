@@ -18,6 +18,24 @@ class Node:
         return "{}({})".format(self.__class__.__name__, self.args)
 
 
+class Key(Node):
+    def __init__(self, *args):
+        self.args = []
+        for token in args:
+            self.args.extend(token.split("."))
+
+    def __call__(self, row):
+        value = row
+        for key in self.args:
+            value = value[key]
+
+        return value
+
+    @property
+    def key(self):
+        return '.'.join(self.args)
+
+
 class RowNode(Node):
     pass
 
@@ -29,8 +47,15 @@ class DataNode(Node):
 class Filter(RowNode):
     def __call__(self, row):
         opname, key, value = self.args
+
+        if not isinstance(key, Key):
+            if isinstance(key, str):
+                key = Key(key)
+            else:
+                key = Key(*key)
+
         op = getattr(operator, opname)
-        return op(row[key], value)
+        return op(key(row), value)
 
 
 class And(RowNode):
@@ -46,70 +71,70 @@ class Or(RowNode):
 class In(RowNode):
     def __call__(self, row):
         attr, value = self.args
-        return operator.contains(value, row[attr])
+        return operator.contains(value, attr(row))
 
 
 class NotIn(RowNode):
     def __call__(self, row):
         attr, value = self.args
-        return operator.not_(operator.contains(value, row[attr]))
+        return operator.not_(operator.contains(value, attr(row)))
 
 
 class Contains(RowNode):
     def __call__(self, row):
         attr, value = self.args
-        return operator.contains(row[attr], value)
+        return operator.contains(attr(row), value)
 
 
 class Excludes(RowNode):
     def __call__(self, row):
         attr, value = self.args
-        return operator.not_(operator.contains(row[attr], value))
+        return operator.not_(operator.contains(attr(row), value))
 
 
 class AggregateNode(DataNode):
     @property
     def label(self):
-        return self.args[0]
+        return self.args[0].key
 
 
 class Min(AggregateNode):
     def __call__(self, data):
         (attr,) = self.args
-        return min([row[attr] for row in data])
+        return min([attr(row) for row in data])
 
 
 class Max(AggregateNode):
     @property
     def label(self):
-        return self.args[0]
+        return self.args[0].key
 
     def __call__(self, data):
         (attr,) = self.args
-        return max([row[attr] for row in data])
+        return max([attr(row) for row in data])
 
 
 class Sum(AggregateNode):
     def __call__(self, data):
         (attr,) = self.args
-        return sum([row[attr] for row in data])
+        return sum([attr(row) for row in data])
 
 
 class Mean(AggregateNode):
     def __call__(self, data):
         (attr,) = self.args
-        return sum([row[attr] for row in data]) / len(data)
+        return sum([attr(row) for row in data]) / len(data)
 
 
 class Select(DataNode):
     def __call__(self, data):
-        return [{k: row[k] for k in self.args} for row in data]
+        return [{k.key: k(row) for k in self.args} for row in data]
 
 
 class Values(DataNode):
     def __call__(self, data):
         (attr,) = self.args
-        return [row[attr] for row in data]
+        return [attr(row) for row in data]
 
 
 class Aggregate(DataNode):
@@ -119,14 +144,15 @@ class Aggregate(DataNode):
         groups = OrderedDict()
         for row in data:
             try:
-                groups[row[group_by]].append(row)
+                groups[group_by(row)].append(row)
             except KeyError:
-                groups[row[group_by]] = [row]
+                groups[group_by(row)] = [row]
 
         out = []
         for group_key, rows in groups.items():
             outrow = {attr.label: attr(rows) for attr in attrs}
-            outrow[group_by] = group_key
+
+            outrow[group_by.key] = group_key
 
             out.append(outrow)
 
@@ -282,12 +308,9 @@ class Query:
 
     def _rql_attr(self, attr):
         if isinstance(attr, str):
-            return attr
-
-        elif isinstance(attr, tuple):
-            raise NotImplementedError
-
-        raise NotImplementedError
+            return Key(attr)
+        else:
+            return Key(*attr)
 
     def _rql_and(self, args):
         args = [self._rql_apply(a) for a in args]
@@ -363,16 +386,16 @@ class Query:
         self._rql_results_clause = Count()
 
     def _rql_min(self, args):
-        self._rql_results_clause = Min(args[0])
+        self._rql_results_clause = Min(self._rql_attr(args))
 
     def _rql_max(self, args):
-        self._rql_results_clause = Max(args[0])
+        self._rql_results_clause = Max(self._rql_attr(args))
 
     def _rql_sum(self, args):
-        self._rql_results_clause = Sum(args[0])
+        self._rql_results_clause = Sum(self._rql_attr(args))
 
     def _rql_mean(self, args):
-        self._rql_results_clause = Mean(args[0])
+        self._rql_results_clause = Mean(self._rql_attr(args))
 
     def _rql_first(self, args):
         self._rql_limit_clause = Limit(1, 0)
@@ -392,7 +415,7 @@ class Query:
     def _rql_aggregate(self, args):
         funcs = {"sum": Sum, "min": Min, "max": Max, "mean": Mean, "count": Count}
 
-        group_by = args[0]
+        group_by = self._rql_attr(args[0])
         fields = args[1:]
 
         aggrs = []
