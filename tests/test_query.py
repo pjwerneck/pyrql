@@ -185,6 +185,14 @@ class TestQuery:
         rep = Query(data).query("limit({})".format(limit)).all()
         assert rep == data[:limit]
 
+    def test_default_limit(self, data):
+        rep = Query(data, default_limit=10).all()
+        assert rep == data[:10]
+
+    def test_max_limit(self, data):
+        rep = Query(data, max_limit=10).query("limit(20)").all()
+        assert rep == data[:10]
+
     @pytest.mark.parametrize("limit", [10, 20, 30])
     @pytest.mark.parametrize("offset", [20, 40, 60])
     def test_limit_offset(self, data, limit, offset):
@@ -274,6 +282,23 @@ class TestQuery:
         assert res
         assert res == exp
 
+    def test_select_nested(self, data):
+        res = (
+            Query(data)
+            .query("select(email,position.latitude,position.longitude)")
+            .all()
+        )
+        exp = [
+            {
+                "email": row["email"],
+                "position.latitude": row["position"]["latitude"],
+                "position.longitude": row["position"]["longitude"],
+            }
+            for row in data
+        ]
+        assert res
+        assert res == exp
+
     def test_values(self, data):
         res = Query(data).query("values(state)").all()
         exp = [row["state"] for row in data]
@@ -304,7 +329,7 @@ class TestQuery:
         assert res == exp
 
     def test_aggregate_with_filter(self, data):
-        res = Query(data).query("aggregate(state,sum(balance))&isActive=true").all()
+        res = Query(data).query("isActive=true&aggregate(state,sum(balance))").all()
 
         states = []
         balances = []
@@ -332,7 +357,7 @@ class TestQuery:
     def test_aggregate_with_filter_and_sort(self, data):
         res = (
             Query(data)
-            .query("aggregate(state,sum(balance))&isActive=true&sort(balance)")
+            .query("isActive=true&aggregate(state,sum(balance))&sort(balance)")
             .all()
         )
 
@@ -364,8 +389,13 @@ class TestQuery:
         res = (
             Query(data)
             .query(
-                "aggregate(state,sum(balance),min(position.latitude),max(position.longitude),count())&"
-                "isActive=true&sort(balance)",
+                "&".join(
+                    [
+                        "isActive=true",
+                        "aggregate(state,sum(balance),min(position.latitude),max(position.longitude),count())",
+                        "sort(balance)",
+                    ]
+                )
             )
             .all()
         )
