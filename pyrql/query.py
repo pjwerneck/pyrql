@@ -19,6 +19,14 @@ class Node:
         return "{}({})".format(self.__class__.__name__, self.args)
 
 
+class RowNode(Node):
+    pass
+
+
+class DataNode(Node):
+    pass
+
+
 class Key(Node):
     def __init__(self, *args):
         self.args = []
@@ -28,24 +36,13 @@ class Key(Node):
     def __call__(self, row):
         value = row
         for key in self.args:
-            try:
-                value = value[key]
-            except KeyError:
-                raise RQLQueryError(f"Invalid key {key} for row {row}")
+            value = value.get(key)
 
         return value
 
     @property
     def key(self):
         return ".".join(self.args)
-
-
-class RowNode(Node):
-    pass
-
-
-class DataNode(Node):
-    pass
 
 
 class Filter(RowNode):
