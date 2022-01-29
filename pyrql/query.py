@@ -274,9 +274,6 @@ class Query:
             name = node["name"]
             args = node["args"]
 
-            if name in {"eq", "ne", "lt", "le", "gt", "ge"}:
-                return self._rql_cmp(name, args)
-
             try:
                 method = getattr(self, "_rql_" + name)
             except AttributeError:
@@ -292,12 +289,28 @@ class Query:
 
         return node
 
+    def _rql_eq(self, args):
+        return self._rql_cmp("eq", args)
+
+    def _rql_ne(self, args):
+        return self._rql_cmp("ne", args)
+
+    def _rql_lt(self, args):
+        return self._rql_cmp("lt", args)
+
+    def _rql_le(self, args):
+        return self._rql_cmp("le", args)
+
+    def _rql_gt(self, args):
+        return self._rql_cmp("gt", args)
+
+    def _rql_ge(self, args):
+        return self._rql_cmp("ge", args)
+
     def _rql_cmp(self, name, args):
         attr, value = args
-
         attr = self._rql_attr(attr)
         value = self._rql_value(value, attr)
-
         return Filter(name, attr, value)
 
     def _rql_value(self, value, attr=None):
