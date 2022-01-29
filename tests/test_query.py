@@ -31,7 +31,10 @@ def data():
         ).date()
 
         # convert coordinates to a nested dict, for nested attribute operations
-        row['position'] = {"latitude": row.pop("latitude"), "longitude": row.pop("longitude")}
+        row["position"] = {
+            "latitude": row.pop("latitude"),
+            "longitude": row.pop("longitude"),
+        }
 
     return data_
 
@@ -118,12 +121,18 @@ class TestQuery:
 
         rep = (
             Query(data)
-            .query("and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals()))
+            .query(
+                "and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(
+                    **locals()
+                )
+            )
             .all()
         )
 
         exp = [
-            row for row in data if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)
+            row
+            for row in data
+            if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)
         ]
 
         assert exp == rep
@@ -138,12 +147,16 @@ class TestQuery:
 
         rep = (
             Query(data)
-            .query("or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals()))
+            .query(
+                "or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())
+            )
             .all()
         )
 
         exp = [
-            row for row in data if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)
+            row
+            for row in data
+            if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)
         ]
 
         assert exp == rep

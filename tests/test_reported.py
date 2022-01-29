@@ -67,11 +67,14 @@ class TestReportedErrors:
 
     def test_unbalanced_parenthesis_11(self):
         parsed = parse(r"in(foo,(foo,bar))&sort(+foo)&eq(userid,user)")
-        assert parsed == {'name': 'and', 'args': [
-            {'name': 'in', 'args': ['foo', ('foo', 'bar')]},
-            {'name': 'sort', 'args': [('+', 'foo')]},
-            {'name': 'eq', 'args': ['userid', 'user']}
-        ]}
+        assert parsed == {
+            "name": "and",
+            "args": [
+                {"name": "in", "args": ["foo", ("foo", "bar")]},
+                {"name": "sort", "args": [("+", "foo")]},
+                {"name": "eq", "args": ["userid", "user"]},
+            ],
+        }
 
         with pytest.raises(RQLSyntaxError) as exc:
             parse(r"in(foo,(foo,bar))&sort(+foo))&eq(userid,user)")

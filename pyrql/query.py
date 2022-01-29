@@ -33,7 +33,7 @@ class Key(Node):
 
     @property
     def key(self):
-        return '.'.join(self.args)
+        return ".".join(self.args)
 
 
 class RowNode(Node):
@@ -105,10 +105,6 @@ class Min(AggregateNode):
 
 
 class Max(AggregateNode):
-    @property
-    def label(self):
-        return self.args[0].key
-
     def __call__(self, data):
         (attr,) = self.args
         return max([attr(row) for row in data])
