@@ -9,8 +9,10 @@ from decimal import Decimal
 import pytest
 
 from pyrql import Query
+from pyrql import RQLQueryError
 from pyrql.query import And
 from pyrql.query import Filter
+from pyrql.query import Key
 from pyrql.query import Or
 
 
@@ -36,6 +38,8 @@ def data():
             "longitude": row.pop("longitude"),
         }
 
+        row["indexmod11"] = row["index"] % 11
+
     return data_
 
 
@@ -52,14 +56,14 @@ class TestBase:
         ],
     )
     def test_filter_operators(self, op, tv, fv):
-        f = Filter(op, "id", 10)
+        f = Filter(op, Key("id"), 10)
 
         assert f({"id": tv})
         assert not f({"id": fv})
 
     def test_and_operator(self):
-        a = Filter("eq", "a", 10)
-        b = Filter("eq", "b", "xyz")
+        a = Filter("eq", Key("a"), 10)
+        b = Filter("eq", Key("b"), "xyz")
 
         f = And(a, b)
 
@@ -68,8 +72,8 @@ class TestBase:
         assert not f({"a": 10, "b": None})
 
     def test_or_operator(self):
-        a = Filter("eq", "a", 10)
-        b = Filter("eq", "b", "xyz")
+        a = Filter("eq", Key("a"), 10)
+        b = Filter("eq", Key("b"), "xyz")
 
         f = Or(a, b)
 
@@ -79,9 +83,9 @@ class TestBase:
         assert not f({"a": 0, "b": "x"})
 
     def test_nested_operators(self):
-        a = Filter("eq", "a", 10)
-        b = Filter("eq", "b", "xyz")
-        c = Filter("eq", "c", 10)
+        a = Filter("eq", Key("a"), 10)
+        b = Filter("eq", Key("b"), "xyz")
+        c = Filter("eq", Key("c"), 10)
 
         f = Or(And(a, b), c)
 
@@ -92,6 +96,16 @@ class TestBase:
 
 
 class TestQuery:
+    def test_empty_expr(self, data):
+        rep = Query(data).query("").all()
+        assert rep == data
+
+    def test_invalid_query(self, data):
+        with pytest.raises(RQLQueryError) as exc:
+            Query(data).query("lero()").all()
+
+        assert exc.value.args == ('Invalid query function: lero',)
+
     def test_simple_eq(self, data):
         rep = Query(data).query("eq(index,1)").all()
 
@@ -161,6 +175,11 @@ class TestQuery:
 
         assert exp == rep
 
+    def test_simple_cmp_with_key_as_value(self, data):
+        rep = Query(data).query("eq(index,key(indexmod11))").all()
+        exp = [row for row in data if row["index"] == row["indexmod11"]]
+        assert exp == rep
+
     @pytest.mark.parametrize("key", ["balance", "state"])
     def test_simple_sort(self, data, key):
         rep = Query(data).query("sort({})".format(key)).all()
@@ -199,6 +218,11 @@ class TestQuery:
         rep = Query(data).query("limit({},{})".format(limit, offset)).all()
         assert rep == data[offset:][:limit]
 
+    @pytest.mark.parametrize("offset", [20, 40, 60])
+    def test_offset_only(self, data, offset):
+        rep = Query(data).query("limit(null,{})".format(offset)).all()
+        assert rep == data[offset:]
+
     def test_out(self, data):
         rep = Query(data).query("out(index,(11,12,13,14,15))").all()
         exp = [row for row in data if row["index"] not in (11, 12, 13, 14, 15)]
@@ -215,6 +239,16 @@ class TestQuery:
     def test_one(self, data):
         rep = Query(data).query("eq(index,11)&one()").all()
         assert rep == [data[11]]
+
+    def test_one_no_results(self, data):
+        with pytest.raises(RQLQueryError) as exc:
+            Query(data).query("eq(index,lero)&one()").all()
+        assert exc.value.args == ("No results found for 'one'",)
+
+    def test_one_multiple_results(self, data):
+        with pytest.raises(RQLQueryError) as exc:
+            Query(data).query("or(eq(index,10),eq(index,11))&one()").all()
+        assert exc.value.args == ("Multiple results found for 'one'",)
 
     def test_min(self, data):
         rep = Query(data).query("min(balance)").all()
