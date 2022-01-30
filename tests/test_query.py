@@ -124,7 +124,6 @@ class TestQuery:
         opc2 = getattr(operator, op2)
 
         rep = Query(data).query("and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())).all()
-
         exp = [row for row in data if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)]
 
         assert exp == rep
@@ -243,43 +242,36 @@ class TestQuery:
     def test_in_operator(self, data):
         res = Query(data).query("in(state,(FL,TX))").all()
         exp = [row for row in data if row["state"] in {"FL", "TX"}]
-        assert res
         assert res == exp
 
     def test_out_operator(self, data):
         res = Query(data).query("out(state,(FL,TX))").all()
         exp = [row for row in data if row["state"] not in {"FL", "TX"}]
-        assert res
         assert res == exp
 
     def test_contains_string(self, data):
         res = Query(data).query("contains(email,besto.com)").all()
         exp = [row for row in data if "besto.com" in row["email"]]
-        assert res
         assert res == exp
 
     def test_excludes_string(self, data):
         res = Query(data).query("excludes(email,besto.com)").all()
         exp = [row for row in data if "besto.com" not in row["email"]]
-        assert res
         assert res == exp
 
     def test_contains_array(self, data):
         res = Query(data).query("contains(tags,aliqua)").all()
         exp = [row for row in data if "aliqua" in row["tags"]]
-        assert res
         assert res == exp
 
     def test_excludes_array(self, data):
         res = Query(data).query("excludes(tags,aliqua)").all()
         exp = [row for row in data if "aliqua" not in row["tags"]]
-        assert res
         assert res == exp
 
     def test_select(self, data):
         res = Query(data).query("select(index,state)").all()
         exp = [{"index": row["index"], "state": row["state"]} for row in data]
-        assert res
         assert res == exp
 
     def test_select_nested(self, data):
@@ -292,13 +284,11 @@ class TestQuery:
             }
             for row in data
         ]
-        assert res
         assert res == exp
 
     def test_values(self, data):
         res = Query(data).query("values(state)").all()
         exp = [row["state"] for row in data]
-        assert res
         assert res == exp
 
     def test_aggregate(self, data):
@@ -318,7 +308,6 @@ class TestQuery:
 
         exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
 
-        assert res
         assert res == exp
 
     def test_aggregate_with_filter(self, data):
@@ -341,7 +330,6 @@ class TestQuery:
 
         exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
 
-        assert res
         assert res == exp
 
     def test_aggregate_with_filter_and_sort(self, data):
@@ -365,7 +353,6 @@ class TestQuery:
         exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
         exp.sort(key=operator.itemgetter("balance"))
 
-        assert res
         assert res == exp
 
     def test_aggregate_multiple_with_filter_and_sort(self, data):
@@ -418,27 +405,19 @@ class TestQuery:
             for (state, balance, latitude, longitude, count) in zip(states, balances, latitudes, longitudes, counts)
         ]
         exp.sort(key=operator.itemgetter("balance"))
-
-        assert res
         assert res == exp
 
     def test_unwind_and_select_with_object_array(self, data):
         res = Query(data).query("select(_id,friends)&unwind(friends)&select(_id,friends.name)").all()
         exp = [{"_id": row["_id"], "friends.name": f["name"]} for row in data for f in row["friends"]]
-
-        assert res
         assert res == exp
 
     def test_unwind_and_select_with_value_array(self, data):
         res = Query(data).query("select(_id,tags)&unwind(tags)").all()
         exp = [{"_id": row["_id"], "tags": tag} for row in data for tag in row["tags"]]
-
-        assert res
         assert res == exp
 
     def test_unwind_with_value_array_and_distinct_values(self, data):
         res = Query(data).query("unwind(tags)&values(tags)&distinct()&sort()").all()
         exp = sorted(list({tag for row in data for tag in row["tags"]}))
-
-        assert res
         assert res == exp
