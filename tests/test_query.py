@@ -440,3 +440,32 @@ class TestQuery:
 
         assert res
         assert res == exp
+
+    def test_unwind_and_select_with_object_array(self, data):
+        res = (
+            Query(data)
+            .query("select(_id,friends)&unwind(friends)&select(_id,friends.name)")
+            .all()
+        )
+        exp = [
+            {"_id": row["_id"], "friends.name": f["name"]}
+            for row in data
+            for f in row["friends"]
+        ]
+
+        assert res
+        assert res == exp
+
+    def test_unwind_and_select_with_value_array(self, data):
+        res = Query(data).query("select(_id,tags)&unwind(tags)").all()
+        exp = [{"_id": row["_id"], "tags": tag} for row in data for tag in row["tags"]]
+
+        assert res
+        assert res == exp
+
+    def test_unwind_with_value_array_and_distinct_values(self, data):
+        res = Query(data).query("unwind(tags)&values(tags)&distinct()&sort()").all()
+        exp = sorted(list({tag for row in data for tag in row["tags"]}))
+
+        assert res
+        assert res == exp

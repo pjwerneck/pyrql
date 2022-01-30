@@ -206,38 +206,38 @@ GET /api/v1/tasks?eq(state,COMPLETED)&ne(assigned_user,null)&aggregate(assigned_
 ### Reference Table
 
 
-| RQL                                  | Python equivalent                                      | Obs.                                   |
-| ------------------------------------ |:------------------------------------------------------ |:-------------------------------------- |
-| FILTERING                            |                                                        |                                        |
-| `eq(key,value)`                      | `[row for row in data if row[key] == value] `          |                                        |
-| `ne(key,value)`                      | `[row for row in data if row[key] != value]`           |                                        |
-| `lt(key,value)`                      | `[row for row in data if row[key] < value]`            |                                        |
-| `le(key,value)`                      | `[row for row in data if row[key] <= value]`           |                                        |
-| `gt(key,value)`                      | `[row for row in data if row[key] > value]`            |                                        |
-| `ge(key,value)`                      | `[row for row in data if row[key] >= value]`           |                                        |
-| `in(key,value)`                      | `[row for row in data if row[key] in value]`           |                                        |
-| `out(key,value)`                     | `[row for row in data if row[key] not in value]`       |                                        |
-| `contains(key,value)`                | `[row for row in data if value in row[key]]`           |                                        |
-| `excludes(key,value)`                | `[row for row in data if value not in row[key]]`       |                                        |
-| `and(expr1,expr2,...)`               | `[row for row in data if expr1 and expr2]`             |                                        |
-| `or(expr1,expr2,...)`                | `[row for row in data if expr1 or expr2]`              |                                        |
-| TRANSFORMING                         |                                                        |                                        |
-|                                      |                                                        |                                        |
-| `select(a,b,c,...)`                  | `[{a: row[a], b: row[b], c: row[c]} for row in data]`  |                                        |
-| `values(a)`                          | `[row[a] for row in data]`                             |                                        |
-| `limit(count,start?)`                | `data[start:count]`                                    |                                        |
-| `sort(key)`                          | `sorted(data, key=lambda row: row[key])`               |                                        |
-| `sort(-key)`                         | `sorted(data, key=lambda row: row[key], reverse=True)` |                                        |
-| `distinct()`                         | `list(set(data))`                                      | Unlike `set`, RQL preserves order.     |
-| `first()`                            | `data[0]`                                              |                                        |
-| `one()`                              | `data[0]`                                              | Raises RQLQueryError if len(data) != 1 |
-| `aggregate(key,agg1(a),agg2(b),...)` | See below                                              |                                        |
-| AGGREGATION                          |                                                        |                                        |
-| `sum(key)`                           | `sum([row[key] for row in data])`                      |                                        |
-| `mean(key)`                          | `statistics.mean([row[key] for row in data])`          |                                        |
-| `max(key)`                           | `max([row[key] for row in data])`                      |                                        |
-| `min(key)`                           | `min([row[key] for row in data])`                      |                                        |
-| `count()`                            | `len(data)`                                            |                                        |
+| RQL                                  | Python equivalent                                           | Obs.                                   |
+| ------------------------------------ |:----------------------------------------------------------- |:-------------------------------------- |
+| FILTERING                            |                                                             |                                        |
+| `eq(key,value)`                      | `[row for row in data if row[key] == value] `               |                                        |
+| `ne(key,value)`                      | `[row for row in data if row[key] != value]`                |                                        |
+| `lt(key,value)`                      | `[row for row in data if row[key] < value]`                 |                                        |
+| `le(key,value)`                      | `[row for row in data if row[key] <= value]`                |                                        |
+| `gt(key,value)`                      | `[row for row in data if row[key] > value]`                 |                                        |
+| `ge(key,value)`                      | `[row for row in data if row[key] >= value]`                |                                        |
+| `in(key,value)`                      | `[row for row in data if row[key] in value]`                |                                        |
+| `out(key,value)`                     | `[row for row in data if row[key] not in value]`            |                                        |
+| `contains(key,value)`                | `[row for row in data if value in row[key]]`                |                                        |
+| `excludes(key,value)`                | `[row for row in data if value not in row[key]]`            |                                        |
+| `and(expr1,expr2,...)`               | `[row for row in data if expr1 and expr2]`                  |                                        |
+| `or(expr1,expr2,...)`                | `[row for row in data if expr1 or expr2]`                   |                                        |
+| TRANSFORMING                         |                                                             |                                        |
+| `select(a,b,c,...)`                  | `[{a: row[a], b: row[b], c: row[c]} for row in data]`       |                                        |
+| `values(a)`                          | `[row[a] for row in data]`                                  |                                        |
+| `limit(count,start?)`                | `data[start:count]`                                         |                                        |
+| `sort(key)`                          | `sorted(data, key=lambda row: row[key])`                    |                                        |
+| `sort(-key)`                         | `sorted(data, key=lambda row: row[key], reverse=True)`      |                                        |
+| `distinct()`                         | `list(set(data))`                                           | Unlike `set`, RQL preserves order.     |
+| `first()`                            | `data[0]`                                                   |                                        |
+| `one()`                              | `data[0]`                                                   | Raises RQLQueryError if len(data) != 1 |
+| `aggregate(key,agg1(a),agg2(b),...)` | See below                                                   |                                        |
+| `unwind(key)`                        | `[{**row, key: item} for row in data for item in row[key]]` |                                        |
+| AGGREGATION                          |                                                             |                                        |
+| `sum(key)`                           | `sum([row[key] for row in data])`                           |                                        |
+| `mean(key)`                          | `statistics.mean([row[key] for row in data])`               |                                        |
+| `max(key)`                           | `max([row[key] for row in data])`                           |                                        |
+| `min(key)`                           | `min([row[key] for row in data])`                           |                                        |
+| `count()`                            | `len(data)`                                                 |                                        |
 
 
 The `aggregate` operator can't be summarized in a readable one-liner. It accepts a key, and any number of aggregation operators. All the data is grouped by the key value, aggregated by each aggregation operator, and a new list is built with the results and key value.

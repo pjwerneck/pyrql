@@ -20,11 +20,13 @@ class Node:
 
 
 class RowNode(Node):
-    pass
+    def feed(self, data):
+        return [row for row in data if self(row)]
 
 
 class DataNode(Node):
-    pass
+    def feed(self, data):
+        return self(data)
 
 
 class Key(Node):
@@ -149,6 +151,13 @@ class Aggregate(DataNode):
         return data
 
 
+class Unwind(DataNode):
+    def __call__(self, data):
+        (key,) = self.args
+        data = [{**row, key.key: item} for row in data for item in key(row)]
+        return data
+
+
 class Limit(DataNode):
     def __call__(self, data):
         limit, offset = self.args
@@ -182,8 +191,11 @@ class Distinct(DataNode):
 class Sort(DataNode):
     def __call__(self, data):
         # sort least significant first
-        for prefix, attr in reversed(self.args):
-            data.sort(key=operator.itemgetter(attr), reverse=prefix == "-")
+        if self.args:
+            for prefix, attr in reversed(self.args):
+                data.sort(key=operator.itemgetter(attr), reverse=prefix == "-")
+        else:
+            data.sort()
 
         return data
 
@@ -222,6 +234,13 @@ class Query:
         return self
 
     def all(self):
+        # catch all common error
+        try:
+            return self._all()
+        except (IndexError, KeyError, AttributeError, ValueError) as exc:
+            raise RQLQueryError(repr(exc))
+
+    def _all(self):
         # deepcopy data so we can transform it at will
         data = deepcopy(self.data)
 
@@ -244,10 +263,7 @@ class Query:
 
         # execute the pipeline
         for node in pipeline:
-            if isinstance(node, RowNode):
-                data = [row for row in data if node(row)]
-            else:
-                data = node(data)
+            data = node.feed(data)
 
         return data
 
@@ -417,3 +433,7 @@ class Query:
             aggrs.append(agg_func(agg_attr))
 
         return Aggregate(group_by, aggrs)
+
+    def _rql_unwind(self, args):
+        key = self._rql_attr(args[0])
+        return Unwind(key)
