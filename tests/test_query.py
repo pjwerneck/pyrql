@@ -28,9 +28,7 @@ def data():
         row["registered"] = datetime.datetime.strptime(
             row["registered"][::-1].replace(":", "", 1)[::-1], "%Y-%m-%dT%H:%M:%S %z"
         )
-        row["birthdate"] = datetime.datetime.strptime(
-            row["birthdate"], "%Y-%m-%d"
-        ).date()
+        row["birthdate"] = datetime.datetime.strptime(row["birthdate"], "%Y-%m-%d").date()
 
         # convert coordinates to a nested dict, for nested attribute operations
         row["position"] = {
@@ -45,15 +43,7 @@ def data():
 
 class TestBase:
     @pytest.mark.parametrize(
-        "op,tv,fv",
-        [
-            ("eq", 10, 9),
-            ("ne", 9, 10),
-            ("lt", 9, 11),
-            ("le", 10, 11),
-            ("gt", 11, 10),
-            ("ge", 10, 9),
-        ],
+        "op,tv,fv", [("eq", 10, 9), ("ne", 9, 10), ("lt", 9, 11), ("le", 10, 11), ("gt", 11, 10), ("ge", 10, 9),],
     )
     def test_filter_operators(self, op, tv, fv):
         f = Filter(op, Key("id"), 10)
@@ -104,7 +94,7 @@ class TestQuery:
         with pytest.raises(RQLQueryError) as exc:
             Query(data).query("lero()").all()
 
-        assert exc.value.args == ('Invalid query function: lero',)
+        assert exc.value.args == ("Invalid query function: lero",)
 
     def test_simple_eq(self, data):
         rep = Query(data).query("eq(index,1)").all()
@@ -133,21 +123,9 @@ class TestQuery:
         opc1 = getattr(operator, op1)
         opc2 = getattr(operator, op2)
 
-        rep = (
-            Query(data)
-            .query(
-                "and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(
-                    **locals()
-                )
-            )
-            .all()
-        )
+        rep = Query(data).query("and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())).all()
 
-        exp = [
-            row
-            for row in data
-            if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)
-        ]
+        exp = [row for row in data if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)]
 
         assert exp == rep
 
@@ -159,19 +137,9 @@ class TestQuery:
         opc1 = getattr(operator, op1)
         opc2 = getattr(operator, op2)
 
-        rep = (
-            Query(data)
-            .query(
-                "or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())
-            )
-            .all()
-        )
+        rep = Query(data).query("or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())).all()
 
-        exp = [
-            row
-            for row in data
-            if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)
-        ]
+        exp = [row for row in data if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)]
 
         assert exp == rep
 
@@ -195,9 +163,7 @@ class TestQuery:
     def test_complex_sort(self, data):
         rep = Query(data).query("sort(balance,registered,birthdate)").all()
 
-        assert rep == sorted(
-            data, key=lambda x: (x["balance"], x["registered"], x["birthdate"])
-        )
+        assert rep == sorted(data, key=lambda x: (x["balance"], x["registered"], x["birthdate"]))
 
     @pytest.mark.parametrize("limit", [10, 20, 30])
     def test_simple_limit(self, data, limit):
@@ -317,11 +283,7 @@ class TestQuery:
         assert res == exp
 
     def test_select_nested(self, data):
-        res = (
-            Query(data)
-            .query("select(email,position.latitude,position.longitude)")
-            .all()
-        )
+        res = Query(data).query("select(email,position.latitude,position.longitude)").all()
         exp = [
             {
                 "email": row["email"],
@@ -354,10 +316,7 @@ class TestQuery:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
 
-        exp = [
-            {"state": state, "balance": balance}
-            for (state, balance) in zip(states, balances)
-        ]
+        exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
 
         assert res
         assert res == exp
@@ -380,20 +339,13 @@ class TestQuery:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
 
-        exp = [
-            {"state": state, "balance": balance}
-            for (state, balance) in zip(states, balances)
-        ]
+        exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
 
         assert res
         assert res == exp
 
     def test_aggregate_with_filter_and_sort(self, data):
-        res = (
-            Query(data)
-            .query("isActive=true&aggregate(state,sum(balance))&sort(balance)")
-            .all()
-        )
+        res = Query(data).query("isActive=true&aggregate(state,sum(balance))&sort(balance)").all()
 
         states = []
         balances = []
@@ -410,10 +362,7 @@ class TestQuery:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
 
-        exp = [
-            {"state": state, "balance": balance}
-            for (state, balance) in zip(states, balances)
-        ]
+        exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
         exp.sort(key=operator.itemgetter("balance"))
 
         assert res
@@ -466,9 +415,7 @@ class TestQuery:
                 "position.longitude": longitude,
                 "count": count,
             }
-            for (state, balance, latitude, longitude, count) in zip(
-                states, balances, latitudes, longitudes, counts
-            )
+            for (state, balance, latitude, longitude, count) in zip(states, balances, latitudes, longitudes, counts)
         ]
         exp.sort(key=operator.itemgetter("balance"))
 
@@ -476,16 +423,8 @@ class TestQuery:
         assert res == exp
 
     def test_unwind_and_select_with_object_array(self, data):
-        res = (
-            Query(data)
-            .query("select(_id,friends)&unwind(friends)&select(_id,friends.name)")
-            .all()
-        )
-        exp = [
-            {"_id": row["_id"], "friends.name": f["name"]}
-            for row in data
-            for f in row["friends"]
-        ]
+        res = Query(data).query("select(_id,friends)&unwind(friends)&select(_id,friends.name)").all()
+        exp = [{"_id": row["_id"], "friends.name": f["name"]} for row in data for f in row["friends"]]
 
         assert res
         assert res == exp

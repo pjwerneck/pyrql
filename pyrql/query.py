@@ -4,6 +4,7 @@ import datetime
 import operator
 import statistics
 from collections import defaultdict
+from copy import copy
 from copy import deepcopy
 from urllib.parse import unquote
 
@@ -229,51 +230,49 @@ class Query:
         self.rql_parsed = None
         self.rql_expr = ""
 
+        self.pipeline = []
+
     def query(self, expr):
         if not expr:
-            self.rql_parsed = None
-            self.rql_expr = ""
+            return self
 
-        else:
-            self.rql_expr = expr = unquote(expr)
-            self.rql_parsed = Parser().parse(expr)
+        new = copy(self)
 
-        return self
-
-    def all(self):
-        # deepcopy data so we can transform it at will
-        data = deepcopy(self.data)
-
-        # reset limit clause
-        self._limit_clause = None
-
-        pipeline = []
+        new.rql_expr = expr = unquote(expr)
+        new.rql_parsed = Parser().parse(expr)
 
         # if there's a query, build the pipeline
-        if self.rql_parsed:
+        if new.rql_parsed:
             # if top-level node is not an 'and', make it so
-            if self.rql_parsed["name"] != "and":
-                self.rql_parsed = {"name": "and", "args": [self.rql_parsed]}
+            if new.rql_parsed["name"] != "and":
+                new.rql_parsed = {"name": "and", "args": [new.rql_parsed]}
 
             try:
-                pipeline.extend(self._apply(self.rql_parsed).args)
+                new.pipeline.extend(new._apply(new.rql_parsed).args)
             except RQLQueryError:
                 raise
             except Exception as exc:
                 raise RQLQueryError(f"{exc.__class__.__name__} preparing pipeline: {exc.args}")
 
-        # if there's a default limit and no limit clause was added, add one
-        if self._default_limit and self._limit_clause is None:
-            pipeline.append(Limit(self._default_limit, 0))
+        return new
+
+    def all(self):
+        # deepcopy data so we can transform it at will
+        data = deepcopy(self.data)
 
         # execute the pipeline
-        for node in pipeline:
+        for node in self.pipeline:
             try:
                 data = node.feed(data)
             except RQLQueryError:
                 raise
             except Exception as exc:
                 raise RQLQueryError(f"{exc.__class__.__name__} executing node {node}: {exc.args}")
+
+        # if there's a default limit and no limit clause was added,
+        # feed it
+        if self._default_limit and self._limit_clause is None:
+            data = Limit(self._default_limit, 0).feed(data)
 
         return data
 

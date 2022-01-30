@@ -119,9 +119,7 @@ COLON = pp.Literal(":").suppress()
 RESERVED = pp.Word("@!*+$", exact=1)
 
 UNRESERVED = pp.Word(pp.pyparsing_unicode.alphanums + "-:._~ ", exact=1)
-PCT_ENCODED = pp.Combine(pp.Literal("%") + pp.Word(pp.hexnums, exact=2)).setParseAction(
-    _unquote
-)
+PCT_ENCODED = pp.Combine(pp.Literal("%") + pp.Word(pp.hexnums, exact=2)).setParseAction(_unquote)
 NCHAR = UNRESERVED | PCT_ENCODED | RESERVED
 
 STRING = pp.Combine(pp.OneOrMore(NCHAR))
@@ -133,23 +131,14 @@ NUMBER = common.number
 TYPED_STRING = K_STRING + COLON + STRING
 TYPED_NUMBER = K_NUMBER + COLON + common.number
 TYPED_DATE = (K_DATE + COLON + common.iso8601_date).setParseAction(_date)
-TYPED_DATETIME = (K_DATETIME + COLON + common.iso8601_datetime).setParseAction(
-    _datetime
-)
+TYPED_DATETIME = (K_DATETIME + COLON + common.iso8601_datetime).setParseAction(_datetime)
 TYPED_BOOL = K_BOOL + COLON + (TRUE | FALSE)
 TYPED_EPOCH = (K_EPOCH + COLON + common.number).setParseAction(_epoch)
 TYPED_UUID = (K_UUID + COLON + STRING).setParseAction(_uuid)
 TYPED_DECIMAL = (K_DECIMAL + COLON + STRING).setParseAction(_decimal)
 
 TYPED_VALUE = (
-    TYPED_DECIMAL
-    | TYPED_UUID
-    | TYPED_EPOCH
-    | TYPED_DATETIME
-    | TYPED_DATE
-    | TYPED_NUMBER
-    | TYPED_BOOL
-    | TYPED_STRING
+    TYPED_DECIMAL | TYPED_UUID | TYPED_EPOCH | TYPED_DATETIME | TYPED_DATE | TYPED_NUMBER | TYPED_BOOL | TYPED_STRING
 )
 
 ARRAY = pp.Forward()
@@ -179,9 +168,7 @@ FUNC_CALL = (
 
 CALL_OPERATOR <<= SORT_CALL | FUNC_CALL
 
-COMPARISON = (VALUE + EQUALS + pp.Optional(NAME + EQUALS) + VALUE).setParseAction(
-    _comparison
-)
+COMPARISON = (VALUE + EQUALS + pp.Optional(NAME + EQUALS) + VALUE).setParseAction(_comparison)
 
 OPERATOR = pp.Forward()
 

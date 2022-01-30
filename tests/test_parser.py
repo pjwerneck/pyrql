@@ -33,15 +33,9 @@ class TestParser:
         "expr, args",
         [
             ("a(decimal:0.1)", Decimal("0.1")),
-            (
-                "a(uuid:ff27483cee084b27922daab2de4b9849)",
-                UUID("ff27483cee084b27922daab2de4b9849"),
-            ),
+            ("a(uuid:ff27483cee084b27922daab2de4b9849)", UUID("ff27483cee084b27922daab2de4b9849"),),
             ("a(epoch:1234567890)", datetime.datetime(2009, 2, 13, 23, 31, 30)),
-            (
-                "a(datetime:2009-02-13 23:31:30)",
-                datetime.datetime(2009, 2, 13, 23, 31, 30),
-            ),
+            ("a(datetime:2009-02-13 23:31:30)", datetime.datetime(2009, 2, 13, 23, 31, 30),),
             ("a(date:2009-02-13)", datetime.date(2009, 2, 13)),
             ("a(number:3.14)", 3.14),
             ("a(boolean:true)", True),
@@ -68,8 +62,7 @@ class TestParser:
         assert pd == {"name": op, "args": rep}
 
     @pytest.mark.parametrize(
-        "name, arg",
-        [("lero", "lero"), ("foo.bar", "foo.bar"), ("(foo,bar)", ("foo", "bar"))],
+        "name, arg", [("lero", "lero"), ("foo.bar", "foo.bar"), ("(foo,bar)", ("foo", "bar"))],
     )
     def test_equality_operator(self, name, arg):
         p1 = parse("%s=0" % name)
@@ -83,10 +76,7 @@ class TestParser:
 
         p3 = {
             "name": "and",
-            "args": [
-                {"name": "eq", "args": ["a", 0]},
-                {"name": "eq", "args": ["b", 1]},
-            ],
+            "args": [{"name": "eq", "args": ["a", 0]}, {"name": "eq", "args": ["b", 1]},],
         }
 
         assert p1 == p2
@@ -130,9 +120,7 @@ class TestParser:
         assert unparse(pd) == expr
 
     @pytest.mark.parametrize("func", ["and", "or"])
-    @pytest.mark.parametrize(
-        "args", [["a", "b"], ["a", "b", "c"], ["a", "b", "c", "d"]]
-    )
+    @pytest.mark.parametrize("args", [["a", "b"], ["a", "b", "c"], ["a", "b", "c", "d"]])
     def test_bool_functions(self, func, args):
         expr = "%s(%s)" % (func, ",".join(args))
         rep = {"name": func, "args": args}
@@ -199,17 +187,13 @@ class TestParser:
         assert unparse(pd) == expr
 
     @pytest.mark.parametrize(
-        "expr",
-        ["foo=3&price=lt=10", "eq(foo,3)&lt(price,10)", "and(eq(foo,3),lt(price,10))"],
+        "expr", ["foo=3&price=lt=10", "eq(foo,3)&lt(price,10)", "and(eq(foo,3),lt(price,10))"],
     )
     def test_equivalent_expressions(self, expr):
         pd = parse(expr)
         rep = {
             "name": "and",
-            "args": [
-                {"name": "eq", "args": ["foo", 3]},
-                {"name": "lt", "args": ["price", 10]},
-            ],
+            "args": [{"name": "eq", "args": ["foo", 3]}, {"name": "lt", "args": ["price", 10]},],
         }
         assert pd == rep
 

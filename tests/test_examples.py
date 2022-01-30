@@ -7,7 +7,6 @@ import pytest
 from pyrql import RQLSyntaxError
 from pyrql import parse
 
-
 CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
 
 
@@ -16,10 +15,7 @@ class TestExamples:
         expr = "category=dates&sort(+price)"
         rep = {
             "name": "and",
-            "args": [
-                {"name": "eq", "args": ["category", "dates"]},
-                {"name": "sort", "args": [("+", "price")]},
-            ],
+            "args": [{"name": "eq", "args": ["category", "dates"]}, {"name": "sort", "args": [("+", "price")]},],
         }
 
         pd = parse(expr)
@@ -36,21 +32,14 @@ class TestExamples:
         expr = "or(eq(category,toy),eq(category,food))"
         rep = {
             "name": "or",
-            "args": [
-                {"name": "eq", "args": ["category", "toy"]},
-                {"name": "eq", "args": ["category", "food"]},
-            ],
+            "args": [{"name": "eq", "args": ["category", "toy"]}, {"name": "eq", "args": ["category", "food"]},],
         }
 
         pd = parse(expr)
         assert pd == rep
 
     @pytest.mark.parametrize(
-        "exre",
-        [
-            ("sort(+foo)", [("+", "foo")]),
-            ("sort(+price,-rating)", [("+", "price"), ("-", "rating")]),
-        ],
+        "exre", [("sort(+foo)", [("+", "foo")]), ("sort(+price,-rating)", [("+", "price"), ("-", "rating")]),],
     )
     def test_rfc_sort_examples(self, exre):
         expr, args = exre
@@ -76,10 +65,7 @@ class TestExamples:
                 {"name": "eq", "args": ["foo", 3]},
                 {
                     "name": "or",
-                    "args": [
-                        {"name": "eq", "args": ["bar", "text"]},
-                        {"name": "eq", "args": ["bar", "string"]},
-                    ],
+                    "args": [{"name": "eq", "args": ["bar", "text"]}, {"name": "eq", "args": ["bar", "string"]},],
                 },
             ],
         }
@@ -110,35 +96,24 @@ class TestJSExamples:
         assert parse(expr) == rep
 
     @pytest.mark.parametrize(
-        "expr",
-        ["foo=3&price=lt=10", "eq(foo,3)&lt(price,10)", "and(eq(foo,3),lt(price,10))"],
+        "expr", ["foo=3&price=lt=10", "eq(foo,3)&lt(price,10)", "and(eq(foo,3),lt(price,10))"],
     )
     def test_and_operator(self, expr):
         rep = {
             "name": "and",
-            "args": [
-                {"name": "eq", "args": ["foo", 3]},
-                {"name": "lt", "args": ["price", 10]},
-            ],
+            "args": [{"name": "eq", "args": ["foo", 3]}, {"name": "lt", "args": ["price", 10]},],
         }
 
         assert parse(expr) == rep
 
     @pytest.mark.parametrize(
-        "expr",
-        ["(foo=3|foo=bar)&price=lt=10", "and(or(eq(foo,3),eq(foo,bar)),lt(price,10))"],
+        "expr", ["(foo=3|foo=bar)&price=lt=10", "and(or(eq(foo,3),eq(foo,bar)),lt(price,10))"],
     )
     def test_or_operator(self, expr):
         rep = {
             "name": "and",
             "args": [
-                {
-                    "name": "or",
-                    "args": [
-                        {"name": "eq", "args": ["foo", 3]},
-                        {"name": "eq", "args": ["foo", "bar"]},
-                    ],
-                },
+                {"name": "or", "args": [{"name": "eq", "args": ["foo", 3]}, {"name": "eq", "args": ["foo", "bar"]},],},
                 {"name": "lt", "args": ["price", 10]},
             ],
         }
