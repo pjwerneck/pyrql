@@ -229,7 +229,7 @@ class Query:
 
         self.pipeline = []
 
-    def query(self, expr):
+    def query(self, expr, ignore_top_eq=None):
         if not expr:
             return self
 
@@ -243,6 +243,13 @@ class Query:
             # if top-level node is not an 'and', make it so
             if new.rql_parsed["name"] != "and":
                 new.rql_parsed = {"name": "and", "args": [new.rql_parsed]}
+
+            # if we were asked to ignore any top level eq nodes,
+            # remove them
+            if ignore_top_eq:
+                new.rql_parsed["args"] = [
+                    arg for arg in new.rql_parsed["args"]
+                    if not (arg["name"] == "eq" and arg["args"][0] in ignore_top_eq)]
 
             try:
                 new.pipeline.extend(new._apply(new.rql_parsed).args)

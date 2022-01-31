@@ -105,13 +105,9 @@ class TestQuery:
     @pytest.mark.parametrize("op", ["eq", "ne", "lt", "le", "gt", "ge"])
     @pytest.mark.parametrize("val", [1, 10, 50, 100])
     def test_simple_cmp(self, data, op, val):
-
         opc = getattr(operator, op)
-
         rep = Query(data).query("{}(index,{})".format(op, val)).all()
-
         exp = [row for row in data if opc(row["index"], val)]
-
         assert exp == rep
 
     @pytest.mark.parametrize("op1", ["ne", "lt", "gt"])
@@ -145,6 +141,11 @@ class TestQuery:
     def test_simple_cmp_with_key_as_value(self, data):
         rep = Query(data).query("eq(index,key(indexmod11))").all()
         exp = [row for row in data if row["index"] == row["indexmod11"]]
+        assert exp == rep
+
+    def test_simple_cmp_with_ignore_top_eq(self, data):
+        rep = Query(data).query("index=1&eq(gender,male)", ignore_top_eq=["index"]).all()
+        exp = [row for row in data if row["gender"] == "male"]
         assert exp == rep
 
     @pytest.mark.parametrize("key", ["balance", "state"])
