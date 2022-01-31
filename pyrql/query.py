@@ -16,9 +16,6 @@ class Node:
     def __init__(self, *args):
         self.args = args
 
-    def __repr__(self):
-        return "{}({})".format(self.__class__.__name__, self.args)
-
 
 class RowNode(Node):
     def feed(self, data):
