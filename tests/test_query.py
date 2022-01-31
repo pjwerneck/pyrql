@@ -10,10 +10,6 @@ import pytest
 
 from pyrql import Query
 from pyrql import RQLQueryError
-from pyrql.query import And
-from pyrql.query import Filter
-from pyrql.query import Key
-from pyrql.query import Or
 
 
 @pytest.fixture(scope="session")
@@ -39,50 +35,6 @@ def data():
         row["indexmod11"] = row["index"] % 11
 
     return data_
-
-
-class TestBase:
-    @pytest.mark.parametrize(
-        "op,tv,fv", [("eq", 10, 9), ("ne", 9, 10), ("lt", 9, 11), ("le", 10, 11), ("gt", 11, 10), ("ge", 10, 9),],
-    )
-    def test_filter_operators(self, op, tv, fv):
-        f = Filter(op, Key("id"), 10)
-
-        assert f({"id": tv})
-        assert not f({"id": fv})
-
-    def test_and_operator(self):
-        a = Filter("eq", Key("a"), 10)
-        b = Filter("eq", Key("b"), "xyz")
-
-        f = And(a, b)
-
-        assert f({"a": 10, "b": "xyz"})
-        assert not f({"a": 11, "b": "xyz"})
-        assert not f({"a": 10, "b": None})
-
-    def test_or_operator(self):
-        a = Filter("eq", Key("a"), 10)
-        b = Filter("eq", Key("b"), "xyz")
-
-        f = Or(a, b)
-
-        assert f({"a": 10, "b": "x"})
-        assert f({"a": 0, "b": "xyz"})
-
-        assert not f({"a": 0, "b": "x"})
-
-    def test_nested_operators(self):
-        a = Filter("eq", Key("a"), 10)
-        b = Filter("eq", Key("b"), "xyz")
-        c = Filter("eq", Key("c"), 10)
-
-        f = Or(And(a, b), c)
-
-        assert f({"a": 10, "b": "xyz", "c": 0})
-        assert f({"a": 0, "b": "x", "c": 10})
-
-        assert not f({"a": 11, "b": "x", "c": 0})
 
 
 class TestQuery:
@@ -290,6 +242,16 @@ class TestQuery:
     def test_values(self, data):
         res = Query(data).query("values(state)").all()
         exp = [row["state"] for row in data]
+        assert res == exp
+
+    def test_index(self, data):
+        res = Query(data).query("index(0)").all()
+        exp = data[0]
+        assert res == exp
+
+    def test_slice(self, data):
+        res = Query(data).query("slice(null,null,2)").all()
+        exp = data[::2]
         assert res == exp
 
     def test_aggregate(self, data):
