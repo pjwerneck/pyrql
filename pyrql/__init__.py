@@ -8,7 +8,7 @@ from pyrql.query import Query
 from pyrql.unparser import Unparser
 
 __title__ = "pyrql"
-__version__ = "0.7.4"
+__version__ = "0.7.5"
 __author__ = "Pedro Werneck"
 __license__ = "MIT"
 
