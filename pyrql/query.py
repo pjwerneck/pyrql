@@ -3,6 +3,8 @@
 import operator
 import statistics
 from collections import defaultdict
+from collections.abc import Mapping
+from collections.abc import Sequence
 from copy import copy
 from copy import deepcopy
 from urllib.parse import unquote
@@ -57,6 +59,12 @@ class Key(Node):
 
     def __str__(self):
         return ".".join(self.args)
+
+    def feed(self, data):
+        if isinstance(data, Sequence):
+            return [self.feed(row) for row in data]
+        else:
+            return self(data)
 
 
 class _Filter(RowNode):
@@ -349,7 +357,7 @@ class Query:
         return data
 
     def _apply(self, token):
-        if not isinstance(token, dict):
+        if not isinstance(token, Mapping):
             return token
 
         name = token["name"]

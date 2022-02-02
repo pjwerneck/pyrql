@@ -384,3 +384,8 @@ class TestQuery:
         res = Query(data).query("unwind(tags)&values(tags)&distinct()&sort()").all()
         exp = sorted(list({tag for row in data for tag in row["tags"]}))
         assert res == exp
+
+    def test_index_and_key(self, data):
+        res = Query(data).query("index(10)&key(friends)").all()
+        exp = data[10]['friends']
+        assert res == exp
