@@ -389,3 +389,8 @@ class TestQuery:
         res = Query(data).query("index(10)&key(friends)").all()
         exp = data[10]['friends']
         assert res == exp
+
+    def test_index_and_select(self, data):
+        res = Query(data).query("index(10)&select(friends,_id)").all()
+        exp = {"friends": data[10]['friends'], "_id": data[10]["_id"]}
+        assert res == exp

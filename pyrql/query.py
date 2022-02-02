@@ -174,10 +174,18 @@ class Mean(AggregateNode):
         return statistics.mean([self.key(row) for row in data])
 
 
-class Select(DataNode):
-    def __call__(self, data):
-        keys = [Key(arg) for arg in self.args]
-        return [{str(key): key(row) for key in keys} for row in data]
+class Select(RowNode):
+    def __init__(self, *args):
+        self.keys = [Key(arg) for arg in args]
+
+    def __call__(self, row):
+        return {str(key): key(row) for key in self.keys}
+
+    def feed(self, data):
+        if isinstance(data, Mapping):
+            return self(data)
+        else:
+            return [self.feed(row) for row in data]
 
 
 class Values(DataNode):
