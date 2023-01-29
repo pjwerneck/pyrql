@@ -1,6 +1,6 @@
 # pyrql
 
-[![Build Status](https://travis-ci.org/pjwerneck/pyrql.svg?branch=develop)](https://travis-ci.org/pjwerneck/pyrql)
+[![Build Status](https://github.com/pjwerneck/pyrql/actions/workflows/pytest.yml/badge.svg?branch=develop)](https://github.com/pjwerneck/pyrql/actions/workflows/pytest.yml)
 
 
 ## Overview
