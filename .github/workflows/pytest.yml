@@ -33,7 +33,7 @@ jobs:
 
     - name: Install dependencies
       run: |
-        python -m poetry install --no-interaction --no-root -vv
+        poetry install --no-interaction --no-root -vv
 
     - name: Test with pytest
       run: |
