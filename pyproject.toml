@@ -8,7 +8,7 @@ license = "MIT"
 repository = "https://github.com/pjwerneck/pyrql"
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.7"
 pyparsing = "^2.4"
 python-dateutil = "^2.8"
 
