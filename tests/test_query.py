@@ -71,8 +71,14 @@ class TestQuery:
         opc1 = getattr(operator, op1)
         opc2 = getattr(operator, op2)
 
-        rep = Query(data).query("and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())).all()
-        exp = [row for row in data if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)]
+        rep = (
+            Query(data)
+            .query("and({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals()))
+            .all()
+        )
+        exp = [
+            row for row in data if opc1(row["index"], v1) and opc2(row["position"]["latitude"], v2)
+        ]
 
         assert exp == rep
 
@@ -84,9 +90,15 @@ class TestQuery:
         opc1 = getattr(operator, op1)
         opc2 = getattr(operator, op2)
 
-        rep = Query(data).query("or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals())).all()
+        rep = (
+            Query(data)
+            .query("or({op1}(index,{v1}),{op2}(position.latitude,{v2}))".format(**locals()))
+            .all()
+        )
 
-        exp = [row for row in data if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)]
+        exp = [
+            row for row in data if opc1(row["index"], v1) or opc2(row["position"]["latitude"], v2)
+        ]
 
         assert exp == rep
 
@@ -365,14 +377,20 @@ class TestQuery:
                 "position.longitude": longitude,
                 "count": count,
             }
-            for (state, balance, latitude, longitude, count) in zip(states, balances, latitudes, longitudes, counts)
+            for (state, balance, latitude, longitude, count) in zip(
+                states, balances, latitudes, longitudes, counts
+            )
         ]
         exp.sort(key=operator.itemgetter("balance"))
         assert res == exp
 
     def test_unwind_and_select_with_object_array(self, data):
-        res = Query(data).query("select(_id,friends)&unwind(friends)&select(_id,friends.name)").all()
-        exp = [{"_id": row["_id"], "friends.name": f["name"]} for row in data for f in row["friends"]]
+        res = (
+            Query(data).query("select(_id,friends)&unwind(friends)&select(_id,friends.name)").all()
+        )
+        exp = [
+            {"_id": row["_id"], "friends.name": f["name"]} for row in data for f in row["friends"]
+        ]
         assert res == exp
 
     def test_unwind_and_select_with_value_array(self, data):
@@ -387,10 +405,10 @@ class TestQuery:
 
     def test_index_and_key(self, data):
         res = Query(data).query("index(10)&key(friends)").all()
-        exp = data[10]['friends']
+        exp = data[10]["friends"]
         assert res == exp
 
     def test_index_and_select(self, data):
         res = Query(data).query("index(10)&select(friends,_id)").all()
-        exp = {"friends": data[10]['friends'], "_id": data[10]["_id"]}
+        exp = {"friends": data[10]["friends"], "_id": data[10]["_id"]}
         assert res == exp

@@ -26,7 +26,15 @@ class TestTokens:
         assert pd[0] == rep
 
     @pytest.mark.parametrize(
-        "expr, rep", [("123", 123), ("abc", "abc"), ("3.14", 3.14), ("true", True), ("false", False), ("null", None),],
+        "expr, rep",
+        [
+            ("123", 123),
+            ("abc", "abc"),
+            ("3.14", 3.14),
+            ("true", True),
+            ("false", False),
+            ("null", None),
+        ],
     )
     def test_VALUE(self, expr, rep):
         pd = pm.VALUE.parseString(expr)
@@ -51,7 +59,10 @@ class TestTokens:
     @pytest.mark.parametrize(
         "expr, rep",
         [
-            ("(123,string:123,date:2017-01-01)", (123, "123", datetime.date(2017, 1, 1)),),
+            (
+                "(123,string:123,date:2017-01-01)",
+                (123, "123", datetime.date(2017, 1, 1)),
+            ),
             ("(1,(2, 3, (4, 5)))", (1, (2, 3, (4, 5)))),
         ],
     )
