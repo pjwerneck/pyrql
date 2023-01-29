@@ -4,7 +4,7 @@ on:
   push:
     branches: [ "develop", "master" ]
   pull_request:
-    branches: [ "develop", "master" ]
+    types: [ ready_for_review, opened, synchronize, reopened, converted_to_draft ]
 
 jobs:
   build:
@@ -24,7 +24,15 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
+    - name: Load cached venv
+      id: cached-poetry
+      uses: actions/cache@v3
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ steps.setup-python.outputs.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
     - name: Install Poetry
+      if: steps.cached-poetry.outputs.cache-hit != 'true'
       uses: snok/install-poetry@v1
       with:
         virtualenvs-create: true
@@ -32,6 +40,7 @@ jobs:
         installer-parallel: true
 
     - name: Install dependencies
+      if: steps.cached-poetry.outputs.cache-hit != 'true'
       run: |
         poetry install --no-interaction --no-root -vv
 
