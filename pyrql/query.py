@@ -136,6 +136,10 @@ class Contains(RowNode):
     def __call__(self, row):
         key, value = self.args
         key = Key(key)
+
+        if not key(row):
+            return False
+
         return operator.contains(key(row), value)
 
 
