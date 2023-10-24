@@ -30,8 +30,8 @@ class Node(metaclass=NodeMeta):
     def get_subnode(cls, name):
         try:
             return NodeMeta.nodes[name]
-        except KeyError:
-            raise RQLQueryError("Invalid query function: %s" % name)
+        except KeyError as e:
+            raise RQLQueryError(f"Invalid query function: {name}") from e
 
 
 class RowNode(Node):
@@ -76,11 +76,7 @@ class _Filter(RowNode):
         self.op = getattr(operator, self.name)
 
     def __call__(self, row):
-        if isinstance(self.value, Key):
-            value = self.value(row)
-        else:
-            value = self.value
-
+        value = self.value(row) if isinstance(self.value, Key) else self.value
         return self.op(self.key(row), value)
 
 
@@ -110,12 +106,12 @@ class GreaterOrEqual(_Filter):
 
 class And(RowNode):
     def __call__(self, row):
-        return all([f(row) for f in self.args if f is not None])
+        return all(f(row) for f in self.args if f is not None)
 
 
 class Or(RowNode):
     def __call__(self, row):
-        return any([f(row) for f in self.args if f is not None])
+        return any(f(row) for f in self.args if f is not None)
 
 
 class In(RowNode):
@@ -156,17 +152,17 @@ class AggregateNode(DataNode):
 
 class Min(AggregateNode):
     def __call__(self, data):
-        return min([self.key(row) for row in data])
+        return min(self.key(row) for row in data)
 
 
 class Max(AggregateNode):
     def __call__(self, data):
-        return max([self.key(row) for row in data])
+        return max(self.key(row) for row in data)
 
 
 class Sum(AggregateNode):
     def __call__(self, data):
-        return sum([self.key(row) for row in data])
+        return sum(self.key(row) for row in data)
 
 
 class Mean(AggregateNode):
@@ -332,7 +328,7 @@ class Query:
                 new.rql_parsed["args"] = [
                     arg
                     for arg in new.rql_parsed["args"]
-                    if not (arg["name"] == "eq" and arg["args"][0] in ignore_top_eq)
+                    if arg["name"] != "eq" or arg["args"][0] not in ignore_top_eq
                 ]
 
             try:
@@ -340,7 +336,9 @@ class Query:
             except RQLQueryError:
                 raise
             except Exception as exc:
-                raise RQLQueryError(f"{exc.__class__.__name__} preparing pipeline: {exc.args}")
+                raise RQLQueryError(
+                    f"{exc.__class__.__name__} preparing pipeline: {exc.args}"
+                ) from exc
 
         return new
 
@@ -355,7 +353,9 @@ class Query:
             except RQLQueryError:
                 raise
             except Exception as exc:
-                raise RQLQueryError(f"{exc.__class__.__name__} executing node {node}: {exc}")
+                raise RQLQueryError(
+                    f"{exc.__class__.__name__} executing node {node}: {exc}"
+                ) from exc
 
         # if there's a default limit and no limit clause was added,
         # add one and feed the data through it
@@ -385,6 +385,4 @@ class Query:
 
             self._limit_clause = True
 
-        node = node_class(*args, **kwargs)
-
-        return node
+        return node_class(*args, **kwargs)

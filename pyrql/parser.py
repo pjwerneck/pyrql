@@ -7,7 +7,7 @@ from uuid import UUID
 import pyparsing as pp
 from dateutil.parser import parse as dateparse
 from pyparsing import pyparsing_common as common
-from six.moves import urllib
+from six.moves import urllib  # pyright: ignore
 
 from .exceptions import RQLSyntaxError
 
@@ -47,23 +47,16 @@ def _comparison(expr, loc, toks):
     if len(toks) == 2:
         return {"name": "eq", "args": toks.asList()}
 
-    else:
-        op = toks.pop(1)
-        return {"name": op, "args": toks.asList()}
+    op = toks.pop(1)
+    return {"name": op, "args": toks.asList()}
 
 
 def _or(expr, loc, toks):
-    if len(toks) == 1:
-        return toks[0]
-    else:
-        return {"name": "or", "args": toks.asList()}
+    return toks[0] if len(toks) == 1 else {"name": "or", "args": toks.asList()}
 
 
 def _and(expr, loc, toks):
-    if len(toks) == 1:
-        return toks[0]
-    else:
-        return {"name": "and", "args": toks.asList()}
+    return toks[0] if len(toks) == 1 else {"name": "and", "args": toks.asList()}
 
 
 def _group(expr, loc, toks):
@@ -118,7 +111,7 @@ COLON = pp.Literal(":").suppress()
 # reserved characters that are not part of the RQL grammar
 RESERVED = pp.Word("@!*+$", exact=1)
 
-UNRESERVED = pp.Word(pp.pyparsing_unicode.alphanums + "-:._~ ", exact=1)
+UNRESERVED = pp.Word(f"{pp.pyparsing_unicode.alphanums}-:._~ ", exact=1)
 PCT_ENCODED = pp.Combine(pp.Literal("%") + pp.Word(pp.hexnums, exact=2)).setParseAction(_unquote)
 NCHAR = UNRESERVED | PCT_ENCODED | RESERVED
 
@@ -195,6 +188,6 @@ class Parser:
         try:
             result = QUERY.parseString(expr, parseAll=True)
         except pp.ParseException as exc:
-            raise RQLSyntaxError(*exc.args)
+            raise RQLSyntaxError(*exc.args) from exc
 
         return result[0]

@@ -72,8 +72,8 @@ class TestParser:
         [("lero", "lero"), ("foo.bar", "foo.bar"), ("(foo,bar)", ("foo", "bar"))],
     )
     def test_equality_operator(self, name, arg):
-        p1 = parse("%s=0" % name)
-        p2 = parse("eq(%s, 0)" % name)
+        p1 = parse(f"{name}=0")
+        p2 = parse(f"eq({name}, 0)")
         assert p1 == p2
         assert p1 == {"name": "eq", "args": [arg, 0]}
 
@@ -122,7 +122,7 @@ class TestParser:
 
     @pytest.mark.parametrize("func", ["in", "out", "contains", "excludes"])
     def test_member_functions(self, func):
-        expr = "%s(name,(a,b))" % func
+        expr = f"{func}(name,(a,b))"
         rep = {"name": func, "args": ["name", ("a", "b")]}
 
         pd = parse(expr)
@@ -132,7 +132,7 @@ class TestParser:
     @pytest.mark.parametrize("func", ["and", "or"])
     @pytest.mark.parametrize("args", [["a", "b"], ["a", "b", "c"], ["a", "b", "c", "d"]])
     def test_bool_functions(self, func, args):
-        expr = "%s(%s)" % (func, ",".join(args))
+        expr = f'{func}({",".join(args)})'
         rep = {"name": func, "args": args}
 
         pd = parse(expr)
@@ -155,7 +155,7 @@ class TestParser:
 
     @pytest.mark.parametrize("func", ["select", "values"])
     def test_query_functions(self, func):
-        expr = "%s(username,password,(address,city))" % func
+        expr = f"{func}(username,password,(address,city))"
         rep = {"name": func, "args": ["username", "password", ("address", "city")]}
 
         pd = parse(expr)
@@ -164,7 +164,7 @@ class TestParser:
 
     @pytest.mark.parametrize("func", ["sum", "mean", "max", "min", "count"])
     def test_aggregate_functions(self, func):
-        expr = "%s((a,b,c))" % func
+        expr = f"{func}((a,b,c))"
         rep = {"name": func, "args": [("a", "b", "c")]}
 
         pd = parse(expr)
@@ -173,7 +173,7 @@ class TestParser:
 
     @pytest.mark.parametrize("func", ["distinct", "first", "one"])
     def test_result_functions(self, func):
-        expr = "%s()" % func
+        expr = f"{func}()"
         rep = {"name": func, "args": []}
 
         pd = parse(expr)
@@ -244,14 +244,14 @@ class TestParser:
     def test_unbalanced_opening_parenthesis(self):
         with pytest.raises(RQLSyntaxError) as exc:
             parse("((state=Florida|state=Alabama)&gender=female")
-        assert exc.value.args[2] == 'Expected ")"'
+        assert exc.value.args[2] == "Expected ')'"
 
     @pytest.mark.parametrize(
         "expr,error",
         [
             ("(state=Florida|state=Alabama))&gender=female", "Expected end of text"),
-            ("()state=Florida|state=Alabama)&gender=female", 'Expected "("'),
-            (")(state=Florida|state=Alabama)&gender=female", 'Expected "("'),
+            ("()state=Florida|state=Alabama)&gender=female", "Expected '('"),
+            (")(state=Florida|state=Alabama)&gender=female", "Expected '('"),
         ],
     )
     def test_unbalanced_closing_parenthesis(self, expr, error):
