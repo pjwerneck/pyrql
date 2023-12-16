@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from datetime import datetime
+from datetime import timezone
 from decimal import Decimal
 from uuid import UUID
 
@@ -72,7 +73,8 @@ def _datetime(expr, loc, toks):
 
 
 def _epoch(expr, loc, toks):
-    return datetime.utcfromtimestamp(toks[0])
+    dt = datetime.utcfromtimestamp(toks[0])
+    return dt.replace(tzinfo=timezone.utc)
 
 
 def _decimal(expr, loc, toks):
