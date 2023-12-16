@@ -102,6 +102,10 @@ K_EPOCH = pp.Keyword("epoch").suppress()
 K_UUID = pp.Keyword("uuid").suppress()
 K_DECIMAL = pp.Keyword("decimal").suppress()
 
+# keywords for inf and nan
+K_INF = pp.Keyword("inf").suppress()
+K_NAN = pp.Keyword("nan").suppress()
+
 # grammar
 PLUS = pp.Literal("+")
 MINUS = pp.Literal("-")
@@ -157,7 +161,7 @@ CALL_OPERATOR = pp.Forward()
 
 ARGUMENT = CALL_OPERATOR | VALUE
 
-SORT_ARG = ((MINUS | PLUS) + VALUE).setParseAction(lambda e, l, t: tuple(t))
+SORT_ARG = ((MINUS | PLUS) + NAME).setParseAction(lambda exp, loc, toks: tuple(toks))
 SORT_ARGARRAY = pp.delimitedList(SORT_ARG).setResultsName("args")
 SORT_CALL = (SORT + LPAR + SORT_ARGARRAY + RPAR).setParseAction(_sort_call)
 
