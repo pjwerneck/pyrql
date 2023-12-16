@@ -28,6 +28,11 @@ from .exceptions import RQLSyntaxError
 # decimal
 
 
+# a custom datetime class to handle epoch timestamps and allow reversability
+class epoch_datetime(datetime):
+    pass
+
+
 def _sort_call(expr, loc, toks):
     return {"name": "sort", "args": toks.args.asList()}
 
@@ -73,7 +78,7 @@ def _datetime(expr, loc, toks):
 
 
 def _epoch(expr, loc, toks):
-    dt = datetime.utcfromtimestamp(toks[0])
+    dt = epoch_datetime.utcfromtimestamp(toks[0])
     return dt.replace(tzinfo=timezone.utc)
 
 
@@ -161,7 +166,7 @@ CALL_OPERATOR = pp.Forward()
 
 ARGUMENT = CALL_OPERATOR | VALUE
 
-SORT_ARG = ((MINUS | PLUS) + NAME).setParseAction(lambda exp, loc, toks: tuple(toks))
+SORT_ARG = ((MINUS | PLUS) + VALUE).setParseAction(lambda exp, loc, toks: tuple(toks))
 SORT_ARGARRAY = pp.delimitedList(SORT_ARG).setResultsName("args")
 SORT_CALL = (SORT + LPAR + SORT_ARGARRAY + RPAR).setParseAction(_sort_call)
 
@@ -174,13 +179,13 @@ FUNC_CALL = (
 
 CALL_OPERATOR <<= SORT_CALL | FUNC_CALL
 
+# this handles both attr=value and FIQL syntax attr=op=value
 COMPARISON = (VALUE + EQUALS + pp.Optional(NAME + EQUALS) + VALUE).setParseAction(_comparison)
 
 OPERATOR = pp.Forward()
 
 OR = pp.delimitedList(OPERATOR, delim=pp.Literal("|")).setParseAction(_or)
 AND = pp.delimitedList(OPERATOR, delim=pp.Literal("&")).setParseAction(_and)
-
 
 GROUP = (LPAR + (OR | AND) + RPAR).setParseAction(_group)
 

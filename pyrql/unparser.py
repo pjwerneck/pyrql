@@ -4,6 +4,8 @@ import datetime
 import decimal
 import uuid
 
+from .parser import epoch_datetime
+
 
 class Unparser:
     def unparse(self, expr):
@@ -58,6 +60,9 @@ class Unparser:
 
         elif isinstance(arg, uuid.UUID):
             return "uuid:%s" % arg.hex
+
+        elif isinstance(arg, epoch_datetime):
+            return "epoch:%s" % arg.timestamp()
 
         elif isinstance(arg, datetime.datetime):
             return "datetime:%s" % arg.isoformat()

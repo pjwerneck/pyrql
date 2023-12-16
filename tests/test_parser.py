@@ -1,200 +1,135 @@
 # -*- coding: utf-8 -*-
 
-import datetime
-from decimal import Decimal
-from uuid import UUID
+from typing import NamedTuple
+from typing import Optional
 
 import pytest
+from hypothesis import given
+from hypothesis import strategies as st
 
 from pyrql import RQLSyntaxError
 from pyrql import parse
 from pyrql import unparse
 
-CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
+from . import helpers as hp
+
+
+class BinaryNode(NamedTuple):
+    op: str
+    attr: str
+    pair: Optional[tuple] = None
+
+    def __str__(self):
+        return f"{self.op}({self.attr[1]},{self.pair[1]})"
+
+    @property
+    def expected(self):
+        return {"name": self.op, "args": [self.attr[0], self.pair[0]]}
+
+
+class UnaryNode(NamedTuple):
+    op: str
+    attr: str
+
+    def __str__(self):
+        return f"{self.op}({self.attr[1]})"
+
+    @property
+    def expected(self):
+        return {"name": self.op, "args": [self.attr[0]]}
+
+
+def cmp_ops():
+    return st.builds(BinaryNode, hp.rql_cmp_ops, hp.attribute_pairs, hp.value_pairs)
+
+
+def member_ops():
+    return st.builds(BinaryNode, hp.rql_member_ops, hp.attribute_pairs, hp.array_pairs)
+
+
+def sort_ops():
+    return st.builds(UnaryNode, st.just("sort"), hp.sort_attribute_pairs)
+
+
+def query_ops(attribute_strategy):
+    return st.builds(UnaryNode, attribute_strategy, hp.attribute_pairs)
+
+
+def verify(expr, expected, rev=True):
+    # verify both parser and unparser (reverse)
+    parsed = parse(expr)
+    assert parsed == expected
+    if rev:
+        assert unparse(parsed) == expr
 
 
 class TestParser:
-    @pytest.mark.parametrize(
-        "expr, args",
-        [
-            ("a(1)", [1]),
-            ("a(3.14)", [3.14]),
-            ("a(true)", [True]),
-            ("a(false)", [False]),
-            ("a(null)", [None]),
-            ("a(μéfoo中文кириллица)", ["μéfoo中文кириллица"]),
-        ],
-    )
-    def test_autoconverted_values(self, expr, args):
-        pd = parse(expr)
-        assert pd == {"name": "a", "args": args}
+    @given(hp.rql_cmp_ops, hp.attribute_pairs, hp.value_pairs)
+    def test_simple_comparison_expression(self, op, name, pair):
+        pyv, rqlv = pair
+        pyattr, rqlattr = name
+        expr = f"{op}({rqlattr},{rqlv})"
+        verify(expr, {"name": op, "args": [pyattr, pyv]})
 
-    @pytest.mark.parametrize(
-        "expr, args",
-        [
-            ("a(decimal:0.1)", Decimal("0.1")),
-            (
-                "a(uuid:ff27483cee084b27922daab2de4b9849)",
-                UUID("ff27483cee084b27922daab2de4b9849"),
-            ),
-            ("a(epoch:1234567890)", datetime.datetime(2009, 2, 13, 23, 31, 30)),
-            (
-                "a(datetime:2009-02-13 23:31:30)",
-                datetime.datetime(2009, 2, 13, 23, 31, 30),
-            ),
-            ("a(date:2009-02-13)", datetime.date(2009, 2, 13)),
-            ("a(number:3.14)", 3.14),
-            ("a(boolean:true)", True),
-            ("a(string:123)", "123"),
-        ],
-    )
-    def test_explicitly_converted_values(self, expr, args):
-        pd = parse(expr)
-        assert pd == {"name": "a", "args": [args]}
+    @given(cmp_ops())
+    def test_binary_operator_with_single_attribute(self, v):
+        verify(str(v), v.expected)
 
-    @pytest.mark.parametrize("op", CMP_OPS)
-    @pytest.mark.parametrize(
-        "expr, rep",
-        [
-            ("%s(a,1)", ["a", 1]),
-            ("%s(a,xyz)", ["a", "xyz"]),
-            ("%s(a,string:1)", ["a", "1"]),
-            ("%s(a,date:2017-01-01)", ["a", datetime.date(2017, 1, 1)]),
-        ],
-    )
-    def test_op_calls(self, op, expr, rep):
-        pd = parse(expr % op)
+    @given(cmp_ops(), cmp_ops())
+    def test_top_level_and_operator(self, a, b):
+        verify(f"{a}&{b}", {"name": "and", "args": [a.expected, b.expected]}, rev=False)
 
-        assert pd == {"name": op, "args": rep}
+    @given(cmp_ops(), cmp_ops(), cmp_ops())
+    def test_top_level_and_operator_multiple(self, a, b, c):
+        verify(
+            f"{a}&{b}&{c}",
+            {"name": "and", "args": [a.expected, b.expected, c.expected]},
+            rev=False,
+        )
 
-    @pytest.mark.parametrize(
-        "name, arg",
-        [("lero", "lero"), ("foo.bar", "foo.bar"), ("(foo,bar)", ("foo", "bar"))],
-    )
-    def test_equality_operator(self, name, arg):
-        p1 = parse(f"{name}=0")
-        p2 = parse(f"eq({name}, 0)")
-        assert p1 == p2
-        assert p1 == {"name": "eq", "args": [arg, 0]}
+    @given(cmp_ops(), cmp_ops())
+    def test_literal_and_operator(self, a, b):
+        verify(f"and({a},{b})", {"name": "and", "args": [a.expected, b.expected]})
 
-    def test_and_operator_pair(self):
-        p1 = parse("eq(a,0)&eq(b,1)")
-        p2 = parse("and(eq(a, 0), eq(b, 1))")
+    @given(cmp_ops(), cmp_ops(), cmp_ops())
+    def test_literal_and_operator_multiple(self, a, b, c):
+        verify(f"and({a},{b},{c})", {"name": "and", "args": [a.expected, b.expected, c.expected]})
 
-        p3 = {
-            "name": "and",
-            "args": [
-                {"name": "eq", "args": ["a", 0]},
-                {"name": "eq", "args": ["b", 1]},
-            ],
-        }
+    @given(cmp_ops(), cmp_ops())
+    def test_literal_or_operator(self, a, b):
+        verify(f"or({a},{b})", {"name": "or", "args": [a.expected, b.expected]})
 
-        assert p1 == p2
-        assert p1 == p3
+    @given(cmp_ops(), cmp_ops(), cmp_ops(), cmp_ops())
+    def test_nested_literal_and_or(self, a, b, c, d):
+        verify(
+            f"and({a},or({b},{c}),{d})",
+            {
+                "name": "and",
+                "args": [a.expected, {"name": "or", "args": [b.expected, c.expected]}, d.expected],
+            },
+        )
 
-    def test_and_operator_triple(self):
-        p1 = parse("eq(a,0)&eq(b,1)&eq(c,2)")
-        p2 = parse("and(eq(a, 0), eq(b, 1), eq(c, 2))")
+    @given(member_ops())
+    def test_membership_operators(self, v):
+        verify(str(v), v.expected)
 
-        p3 = {
-            "name": "and",
-            "args": [
-                {"name": "eq", "args": ["a", 0]},
-                {"name": "eq", "args": ["b", 1]},
-                {"name": "eq", "args": ["c", 2]},
-            ],
-        }
+    @given(sort_ops())
+    def test_sort(self, v):
+        verify(str(v), v.expected, rev=False)
 
-        assert p1 == p2
-        assert p1 == p3
+    @given(query_ops(st.one_of(st.just("select"), st.just("values"), st.just("recurse"))))
+    def test_transform_ops(self, v):
+        verify(str(v), v.expected)
 
-    def test_or_operator(self):
-        p1 = parse("(f(1)|f(2))")
-        p2 = parse("or(f(1),f(2))")
-
-        p3 = {
-            "name": "or",
-            "args": [{"name": "f", "args": [1]}, {"name": "f", "args": [2]}],
-        }
-
-        assert p1 == p2
-        assert p1 == p3
-
-    @pytest.mark.parametrize("func", ["in", "out", "contains", "excludes"])
-    def test_member_functions(self, func):
-        expr = f"{func}(name,(a,b))"
-        rep = {"name": func, "args": ["name", ("a", "b")]}
-
-        pd = parse(expr)
-        assert pd == rep
-        assert unparse(pd) == expr
-
-    @pytest.mark.parametrize("func", ["and", "or"])
-    @pytest.mark.parametrize("args", [["a", "b"], ["a", "b", "c"], ["a", "b", "c", "d"]])
-    def test_bool_functions(self, func, args):
-        expr = f'{func}({",".join(args)})'
-        rep = {"name": func, "args": args}
-
-        pd = parse(expr)
-        assert rep == pd
-        assert unparse(pd) == expr
-
-    @pytest.mark.parametrize(
-        "expr, args",
-        [
-            ("sort(+lero)", [("+", "lero")]),
-            ("sort(+foo,-bar)", [("+", "foo"), ("-", "bar")]),
-            ("sort(+(foo,bar),-lero)", [("+", ("foo", "bar")), ("-", "lero")]),
-        ],
-    )
-    def test_sort_function(self, expr, args):
-        rep = {"name": "sort", "args": args}
-
-        pd = parse(expr)
-        assert pd == rep
-
-    @pytest.mark.parametrize("func", ["select", "values"])
-    def test_query_functions(self, func):
-        expr = f"{func}(username,password,(address,city))"
-        rep = {"name": func, "args": ["username", "password", ("address", "city")]}
-
-        pd = parse(expr)
-        assert pd == rep
-        assert unparse(pd) == expr
-
-    @pytest.mark.parametrize("func", ["sum", "mean", "max", "min", "count"])
-    def test_aggregate_functions(self, func):
-        expr = f"{func}((a,b,c))"
-        rep = {"name": func, "args": [("a", "b", "c")]}
-
-        pd = parse(expr)
-        assert pd == rep
-        assert unparse(pd) == expr
+    @given(query_ops(st.one_of(st.just("sum"), st.just("mean"), st.just("max"), st.just("min"))))
+    def test_aggregate_ops(self, v):
+        verify(str(v), v.expected)
 
     @pytest.mark.parametrize("func", ["distinct", "first", "one"])
     def test_result_functions(self, func):
         expr = f"{func}()"
         rep = {"name": func, "args": []}
-
-        pd = parse(expr)
-        assert pd == rep
-        assert unparse(pd) == expr
-
-    def test_limit_function(self):
-        expr = "limit(10,0)"
-        rep = {"name": "limit", "args": [10, 0]}
-
-        pd = parse(expr)
-        assert rep == pd
-        assert unparse(pd) == expr
-
-    def test_recurse_function(self):
-        expr = "recurse(lero)"
-        rep = {"name": "recurse", "args": ["lero"]}
-        pd = parse(expr)
-
-        assert rep == pd
-        assert unparse(pd) == expr
+        verify(expr, rep)
 
     @pytest.mark.parametrize(
         "expr",
@@ -211,19 +146,7 @@ class TestParser:
         }
         assert pd == rep
 
-    def test_toplevel_and(self):
-        pd = parse("eq(a, 1),eq(b, 2),eq(c, 3)")
-        rep = {
-            "name": "and",
-            "args": [
-                {"name": "eq", "args": ["a", 1]},
-                {"name": "eq", "args": ["b", 2]},
-                {"name": "eq", "args": ["c", 3]},
-            ],
-        }
-        assert pd == rep
-
-    def test_parenthesis(self):
+    def test_parenthesis_grouping(self):
         pd = parse("(state=Florida|state=Alabama)&gender=female")
         rep = {
             "name": "and",
