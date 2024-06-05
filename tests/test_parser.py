@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 from typing import NamedTuple
-from typing import Optional
 
 import pytest
 from hypothesis import given
@@ -17,7 +16,7 @@ from . import helpers as hp
 class BinaryNode(NamedTuple):
     op: str
     attr: str
-    pair: Optional[tuple] = None
+    pair: tuple
 
     def __str__(self):
         return f"{self.op}({self.attr[1]},{self.pair[1]})"

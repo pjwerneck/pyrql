@@ -7,6 +7,8 @@ from collections.abc import Mapping
 from collections.abc import Sequence
 from copy import copy
 from copy import deepcopy
+from typing import Any
+from typing import Optional
 from urllib.parse import unquote
 
 from .exceptions import RQLQueryError
@@ -32,6 +34,9 @@ class Node(metaclass=NodeMeta):
             return NodeMeta.nodes[name]
         except KeyError as e:
             raise RQLQueryError(f"Invalid query function: {name}") from e
+
+    def __call__(self, *args: Any, **kwds: Any) -> Any:
+        raise NotImplementedError
 
 
 class RowNode(Node):
@@ -68,7 +73,7 @@ class Key(Node):
 
 
 class _Filter(RowNode):
-    name = None
+    name = ""
 
     def __init__(self, key, value):
         self.key = Key(key)
@@ -200,7 +205,7 @@ class Aggregate(DataNode):
         self.aggrs = aggrs
 
     def __call__(self, data):
-        groups = defaultdict(list)
+        groups = defaultdict(list, {})
         for row in data:
             groups[self.key(row)].append(row)
 
@@ -302,7 +307,7 @@ class Query:
         self._max_limit = max_limit
         self._limit_clause = None
 
-        self.rql_parsed = None
+        self.rql_parsed: Optional[dict] = None
         self.rql_expr = ""
 
         self.pipeline = []

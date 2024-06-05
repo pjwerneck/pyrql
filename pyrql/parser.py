@@ -3,6 +3,7 @@
 from datetime import datetime
 from datetime import timezone
 from decimal import Decimal
+from typing import Any
 from uuid import UUID
 
 import pyparsing as pp
@@ -90,9 +91,9 @@ def _uuid(expr, loc, toks):
     return UUID(hex=toks[0])
 
 
-TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))
-FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))
-NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))
+TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))  # type: ignore
+FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))  # type: ignore
+NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))  # type: ignore
 
 # let's treat sort as a keyword to better handle the +- prefix syntax
 SORT = pp.Keyword("sort").suppress()
@@ -195,7 +196,7 @@ QUERY = pp.delimitedList(AND).setParseAction(_and)
 
 
 class Parser:
-    def parse(self, expr):
+    def parse(self, expr) -> Any:
         try:
             result = QUERY.parseString(expr, parseAll=True)
         except pp.ParseException as exc:
