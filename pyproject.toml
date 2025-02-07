@@ -1,39 +1,72 @@
-
-[tool.poetry]
+[project]
 name = "pyrql"
 version = "0.7.8"
 description = "RQL parsing"
-authors = ["Pedro Werneck <pjwerneck@gmail.com>"]
+authors = [{ name = "Pedro Werneck", email = "pjwerneck@gmail.com" }]
+requires-python = "~=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+]
 license = "MIT"
-repository = "https://github.com/pjwerneck/pyrql"
+dependencies = [
+    "pyparsing>=2.4",
+    "python-dateutil~=2.8",
+]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pyparsing = ">=2.4"
-python-dateutil = "^2.8"
+[project.urls]
+Repository = "https://github.com/pjwerneck/pyrql"
+"Bug Tracker" = "https://github.com/pjwerneck/pyrql/issues"
 
-[tool.poetry.dev-dependencies]
-pytest = ">=7.2.1"
-
-[tool.poetry.group.dev.dependencies]
-black = ">=24.3.0"
-isort = "^5.12.0"
-hypothesis = "^6.92.1"
-ruff = "^0.4.7"
+[dependency-groups]
+dev = [
+    "pytest>=7.2.1",
+    "hypothesis>=6.92.1,<7",
+    "rust>=1.3.1",
+]
 
 [build-system]
-requires = ["poetry>=0.12"]
-build-backend = "poetry.masonry.api"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.black]
+[tool.ruff]
+exclude = [".git", ".venv"]
 line-length = 99
+target-version = "py312"
+extend-exclude = ["neuropad/core/**"]
 
-[tool.isort]
-profile = "black"
-force_single_line = "True"
-line_length = 99
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint.isort]
+force-single-line = true
+
 
 [tool.pytest.ini_options]
 pythonpath = [
   "."
 ]
+
+
+[tool.hatch.build]
+include = [
+  "pyrql/*.py",
+]
+exclude = [
+  "tests/**",
+]
+
+[tool.hatch.build.targets.sdist]
+exclude = ["tests", ".*"]
+only_packages = true
+
+[tool.hatch.build.targets.wheel]
+exclude = ["tests", ".*"]
+only_packages = true
+packages = ["pyrql"]

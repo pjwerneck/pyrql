@@ -191,7 +191,7 @@ class Select(RowNode):
 
 class Values(DataNode):
     def __init__(self, *args):
-        if len(args) > 1:
+        if len(args) != 1:
             raise RQLQueryError("values() must have a single key argument")
         self.key = Key(args[0])
 
@@ -218,7 +218,7 @@ class Aggregate(DataNode):
 
 class Unwind(DataNode):
     def __init__(self, *args):
-        if len(args) > 1:
+        if len(args) != 1:
             raise RQLQueryError("unwind() must have a single key argument")
         self.key = Key(args[0])
 
