@@ -1139,7 +1139,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "pyparsing", specifier = ">=2.4" },
+    { name = "pyparsing", specifier = "~=3.1" },
     { name = "python-dateutil", specifier = "~=2.8" },
 ]
 

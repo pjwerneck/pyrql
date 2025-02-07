@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import operator
 import statistics
 from collections import defaultdict

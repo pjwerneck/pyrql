@@ -1,17 +1,17 @@
-# -*- coding: utf-8 -*-
-
 from datetime import datetime
 from datetime import timezone
 from decimal import Decimal
 from typing import Any
+from urllib import parse as urlparse
 from uuid import UUID
 
 import pyparsing as pp
 from dateutil.parser import parse as dateparse
 from pyparsing import pyparsing_common as common
-from six.moves import urllib  # pyright: ignore
 
 from .exceptions import RQLSyntaxError
+
+pp.ParserElement.enable_packrat()
 
 # autoconvert:
 # numbers
@@ -43,7 +43,7 @@ def _array(expr, loc, toks):
 
 
 def _unquote(expr, loc, toks):
-    return urllib.parse.unquote(toks[0])
+    return urlparse.unquote(toks[0])
 
 
 def _call_operator(expr, loc, toks):

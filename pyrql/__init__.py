@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 from pyrql.exceptions import RQLError
 from pyrql.exceptions import RQLQueryError
 from pyrql.exceptions import RQLSyntaxError

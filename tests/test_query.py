@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 import datetime
 import json
 import operator
@@ -67,7 +65,6 @@ class TestQuery:
     @pytest.mark.parametrize("v1", [10, 50])
     @pytest.mark.parametrize("v2", [10, 50])
     def test_double_cmp_with_and(self, data, op1, op2, v1, v2):
-
         opc1 = getattr(operator, op1)
         opc2 = getattr(operator, op2)
 
