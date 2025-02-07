@@ -1,3 +1,4 @@
+import os
 from datetime import datetime
 from datetime import timezone
 from decimal import Decimal
@@ -7,11 +8,10 @@ from uuid import UUID
 
 import pyparsing as pp
 from dateutil.parser import parse as dateparse
-from pyparsing import pyparsing_common as common
 
 from .exceptions import RQLSyntaxError
 
-pp.ParserElement.enable_packrat()
+common = pp.pyparsing_common
 
 # autoconvert:
 # numbers
@@ -124,8 +124,8 @@ COLON = pp.Literal(":").suppress()
 RESERVED = pp.Word("@!*+$", exact=1)
 
 UNRESERVED = pp.Word(f"{pp.pyparsing_unicode.alphanums}-:._~ ", exact=1)
-PCT_ENCODED = pp.Combine(pp.Literal("%") + pp.Word(pp.hexnums, exact=2)).setParseAction(_unquote)
-NCHAR = UNRESERVED | PCT_ENCODED | RESERVED
+PCT_ENCODED = pp.Regex(r"%[0-9a-fA-F]{2}").setParseAction(_unquote)
+NCHAR = pp.MatchFirst([UNRESERVED, PCT_ENCODED, RESERVED])
 
 STRING = pp.Combine(pp.OneOrMore(NCHAR))
 
@@ -142,22 +142,24 @@ TYPED_EPOCH = (K_EPOCH + COLON + common.number).setParseAction(_epoch)
 TYPED_UUID = (K_UUID + COLON + STRING).setParseAction(_uuid)
 TYPED_DECIMAL = (K_DECIMAL + COLON + STRING).setParseAction(_decimal)
 
-TYPED_VALUE = (
-    TYPED_DECIMAL
-    | TYPED_UUID
-    | TYPED_EPOCH
-    | TYPED_DATETIME
-    | TYPED_DATE
-    | TYPED_NUMBER
-    | TYPED_BOOL
-    | TYPED_STRING
+TYPED_VALUE = pp.MatchFirst(
+    [
+        TYPED_DECIMAL,
+        TYPED_UUID,
+        TYPED_EPOCH,
+        TYPED_DATETIME,
+        TYPED_DATE,
+        TYPED_NUMBER,
+        TYPED_BOOL,
+        TYPED_STRING,
+    ]
 )
 
 ARRAY = pp.Forward()
 
-# using ^ instead of | between NUMBER and STRING to avoid ambiguity
+# using Or instead of MatchFirst between NUMBER and STRING to avoid ambiguity
 # when parsing strings starting with numbers
-VALUE = TYPED_VALUE | ARRAY | TRUE | FALSE | NULL | (NUMBER ^ STRING)
+VALUE = pp.MatchFirst([TYPED_VALUE, ARRAY, TRUE, FALSE, NULL, pp.Or([NUMBER, STRING])])
 
 PAR_ARRAY = (LPAR + pp.delimitedList(VALUE) + RPAR).setParseAction(_array)
 
@@ -190,7 +192,7 @@ AND = pp.delimitedList(OPERATOR, delim=pp.Literal("&")).setParseAction(_and)
 
 GROUP = (LPAR + (OR | AND) + RPAR).setParseAction(_group)
 
-OPERATOR <<= GROUP | COMPARISON | CALL_OPERATOR
+OPERATOR <<= pp.MatchFirst([GROUP, COMPARISON, CALL_OPERATOR])
 
 QUERY = pp.delimitedList(AND).setParseAction(_and)
 
