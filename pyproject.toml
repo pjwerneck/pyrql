@@ -1,6 +1,6 @@
 [project]
 name = "pyrql"
-version = "0.7.9"
+version = "0.7.10"
 description = "RQL parsing"
 readme = "README.md"
 authors = [{ name = "Pedro Werneck", email = "pjwerneck@gmail.com" }]
