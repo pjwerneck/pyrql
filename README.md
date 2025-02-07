@@ -1,24 +1,45 @@
 # pyrql
 
 [![Build Status](https://github.com/pjwerneck/pyrql/actions/workflows/pytest.yml/badge.svg?branch=develop)](https://github.com/pjwerneck/pyrql/actions/workflows/pytest.yml)
+[![PyPI version](https://badge.fury.io/py/pyrql.svg)](https://badge.fury.io/py/pyrql)
+[![Python Versions](https://img.shields.io/pypi/pyversions/pyrql.svg)](https://pypi.org/project/pyrql/)
 
+## Table of Contents
+- [pyrql](#pyrql)
+  - [Table of Contents](#table-of-contents)
+  - [Overview](#overview)
+  - [Installation](#installation)
+  - [Documentation](#documentation)
+    - [RQL Syntax](#rql-syntax)
+      - [Typed Values](#typed-values)
+      - [URL encoding](#url-encoding)
+      - [Limitations](#limitations)
+    - [Query Engine](#query-engine)
+      - [Example](#example)
+    - [Reference Table](#reference-table)
 
 ## Overview
 
 Resource Query Language (RQL) is a query language designed for use in URIs, with object-style data structures.
 
-This library provides a Python parser that produces output identical to the [JavaScript Library](https://github.com/persvr/rql), and a query engine that can perform RQL queries on lists of dictionaries.
+This library provides:
+- A Python parser that produces output identical to the [JavaScript Library](https://github.com/persvr/rql)
+- A query engine that can perform RQL queries on lists of dictionaries
 
-## Installing
+## Installation
 
-```
+```bash
 pip install pyrql
 ```
 
 
-## RQL Syntax
+## Documentation
 
-The RQL syntax is a compatible superset of the standard HTML form URL encoding. Simple queries can be written in standard HTML form URL encoding, but more complex queries can be written in a URL friendly query string, using a set of nested operators. For example, querying for a property `foo` with the value of `3` could be written as:
+### RQL Syntax
+
+The RQL syntax is a compatible superset of the standard HTML form URL encoding. Simple queries can be written in standard HTML form URL encoding, but more complex queries can be written in a URL friendly query string, using a set of nested operators.
+
+For example, querying for a property `foo` with the value of `3` could be written as:
 
 ```
 eq(foo,3)
@@ -37,7 +58,7 @@ Both expressions result in the exact same parsed value:
 ```
 
 
-### Typed Values
+#### Typed Values
 
 The following types are available:
 
@@ -81,7 +102,7 @@ Types can be used explicitly in the form `type:value`:
 
 ```
 
-### URL encoding
+#### URL encoding
 
 The parser automatically unquotes strings with percent-encoding, but it also accepts characters that would require encoding if submitted on an URI.
 
@@ -95,7 +116,7 @@ The parser automatically unquotes strings with percent-encoding, but it also acc
 If that's undesirable, you should verify the URL before calling the parser.
 
 
-### Limitations
+#### Limitations
 
 The pyrql parser doesn't implement a few redundant details of the RQL syntax, either because the standard isn't clear on what's allowed, or the functionality is already available in a clearer syntax.
 
@@ -112,7 +133,8 @@ The slash syntax for arrays is not implemented yet and will result in a syntax e
 >>> pyrql.parse('(a,b)=1')
 {'args': [('a', 'b'), 1], 'name': 'eq'}
 ```
-## Query Engine
+
+### Query Engine
 
 The main use case for the query engine is to allow API clients to perform server-side filtering on large responses on their own. It's an easy drop-in improvement when you want to provide simple querying capabilities on an existing API endpoint without exposing your storage, or reimplementing everything in a more complete querying solution like GraphQL.
 
@@ -126,7 +148,7 @@ The operators can be categorized in three types:
 
 See the reference below for all operators and the equivalent Python code.
 
-### Example
+#### Example
 
 For example, if you have a Flask API with an endpoint exposing tasks, like this:
 

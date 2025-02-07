@@ -79,7 +79,7 @@ def _datetime(expr, loc, toks):
 
 
 def _epoch(expr, loc, toks):
-    dt = epoch_datetime.utcfromtimestamp(toks[0])
+    dt = epoch_datetime.fromtimestamp(toks[0], tz=timezone.utc)
     return dt.replace(tzinfo=timezone.utc)
 
 
