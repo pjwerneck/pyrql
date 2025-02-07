@@ -2,6 +2,7 @@
 name = "pyrql"
 version = "0.7.9"
 description = "RQL parsing"
+readme = "README.md"
 authors = [{ name = "Pedro Werneck", email = "pjwerneck@gmail.com" }]
 requires-python = "~=3.8"
 classifiers = [
@@ -58,6 +59,7 @@ pythonpath = [
 [tool.hatch.build]
 include = [
   "pyrql/*.py",
+  "README.md",
 ]
 exclude = [
   "tests/**",
