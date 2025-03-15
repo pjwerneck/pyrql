@@ -7,10 +7,9 @@ from uuid import UUID
 
 import pyparsing as pp
 from dateutil.parser import parse as dateparse
+from pyparsing import pyparsing_common as common
 
 from .exceptions import RQLSyntaxError
-
-common = pp.pyparsing_common
 
 # autoconvert:
 # numbers
@@ -125,6 +124,7 @@ RESERVED = pp.Word("@!*+$", exact=1)
 UNRESERVED = pp.Word(f"{pp.pyparsing_unicode.alphanums}-:._~ ", exact=1)
 PCT_ENCODED = pp.Regex(r"%[0-9a-fA-F]{2}").setParseAction(_unquote)
 NCHAR = pp.MatchFirst([UNRESERVED, PCT_ENCODED, RESERVED])
+NCHAR = UNRESERVED | PCT_ENCODED | RESERVED
 
 STRING = pp.Combine(pp.OneOrMore(NCHAR))
 
@@ -141,24 +141,22 @@ TYPED_EPOCH = (K_EPOCH + COLON + common.number).setParseAction(_epoch)
 TYPED_UUID = (K_UUID + COLON + STRING).setParseAction(_uuid)
 TYPED_DECIMAL = (K_DECIMAL + COLON + STRING).setParseAction(_decimal)
 
-TYPED_VALUE = pp.MatchFirst(
-    [
-        TYPED_DECIMAL,
-        TYPED_UUID,
-        TYPED_EPOCH,
-        TYPED_DATETIME,
-        TYPED_DATE,
-        TYPED_NUMBER,
-        TYPED_BOOL,
-        TYPED_STRING,
-    ]
+TYPED_VALUE = (
+    TYPED_DECIMAL
+    | TYPED_UUID
+    | TYPED_EPOCH
+    | TYPED_DATETIME
+    | TYPED_DATE
+    | TYPED_NUMBER
+    | TYPED_BOOL
+    | TYPED_STRING
 )
 
 ARRAY = pp.Forward()
 
-# using Or instead of MatchFirst between NUMBER and STRING to avoid ambiguity
+# using ^ instead of | between NUMBER and STRING to avoid ambiguity
 # when parsing strings starting with numbers
-VALUE = pp.MatchFirst([TYPED_VALUE, ARRAY, TRUE, FALSE, NULL, pp.Or([NUMBER, STRING])])
+VALUE = TYPED_VALUE | ARRAY | TRUE | FALSE | NULL | (NUMBER ^ STRING)
 
 PAR_ARRAY = (LPAR + pp.delimitedList(VALUE) + RPAR).setParseAction(_array)
 
@@ -191,7 +189,7 @@ AND = pp.delimitedList(OPERATOR, delim=pp.Literal("&")).setParseAction(_and)
 
 GROUP = (LPAR + (OR | AND) + RPAR).setParseAction(_group)
 
-OPERATOR <<= pp.MatchFirst([GROUP, COMPARISON, CALL_OPERATOR])
+OPERATOR <<= GROUP | COMPARISON | CALL_OPERATOR
 
 QUERY = pp.delimitedList(AND).setParseAction(_and)
 
