@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/pjwerneck/pyrql/actions/workflows/pytest.yml/badge.svg?branch=develop)](https://github.com/pjwerneck/pyrql/actions/workflows/pytest.yml)
 [![PyPI version](https://badge.fury.io/py/pyrql.svg)](https://badge.fury.io/py/pyrql)
 [![Python Versions](https://img.shields.io/pypi/pyversions/pyrql.svg)](https://pypi.org/project/pyrql/)
+[![PyPI Downloads](https://static.pepy.tech/badge/pyrql)](https://pepy.tech/projects/pyrql)
 
 ## Table of Contents
 - [pyrql](#pyrql)
