@@ -89,9 +89,9 @@ def _uuid(expr, loc, toks):
     return UUID(hex=toks[0])
 
 
-TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))  # pyright: ignore[reportCallIssue]
-FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))  # pyright: ignore[reportCallIssue]
-NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))  # pyright: ignore[reportCallIssue]
+TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))  # pyright: ignore[reportArgumentType]
+FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))  # pyright: ignore[reportArgumentType]
+NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))  # pyright: ignore[reportArgumentType]
 
 # let's treat sort as a keyword to better handle the +- prefix syntax
 SORT = pp.Keyword("sort").suppress()
