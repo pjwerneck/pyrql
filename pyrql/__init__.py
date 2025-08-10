@@ -15,4 +15,4 @@ parse = Parser().parse
 
 unparse = Unparser().unparse
 
-__all__ = ["parse", "unparse", "Query", "RQLError", "RQLQueryError", "RQLSyntaxError"]
+__all__ = ["Query", "RQLError", "RQLQueryError", "RQLSyntaxError", "parse", "unparse"]

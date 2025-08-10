@@ -9,7 +9,7 @@ from hypothesis.extra.dateutil import timezones as st_timezones
 CMP_OPS = ["eq", "lt", "le", "gt", "ge", "ne"]
 
 
-def py2rql(value: Any) -> str:
+def py2rql(value: Any) -> str:  # noqa: PLR0911
     """Convert a Python value to a RQL literal."""
     if isinstance(value, (list, tuple)):
         return "(" + ",".join(map(py2rql, value)) + ")"
@@ -17,26 +17,25 @@ def py2rql(value: Any) -> str:
     if value is None:
         return "null"
 
-    elif isinstance(value, bool):
+    if isinstance(value, bool):
         return str(value).lower()
 
-    elif isinstance(value, decimal.Decimal):
-        return "decimal:%s" % value
+    if isinstance(value, decimal.Decimal):
+        return f"decimal:{value}"
 
-    elif isinstance(value, float):
+    if isinstance(value, float):
         # repr(float) returns the shortest decimal representation
         # for the same binary float
         return repr(value)
 
-    elif isinstance(value, uuid.UUID):
-        return "uuid:%s" % value.hex
+    if isinstance(value, uuid.UUID):
+        return f"uuid:{value.hex}"
 
-    elif isinstance(value, datetime.datetime):
-        return "datetime:%s" % value.isoformat()
+    if isinstance(value, datetime.datetime):
+        return f"datetime:{value.isoformat()}"
 
-    elif isinstance(value, datetime.date):
-        return "date:%s" % value.isoformat()
-
+    if isinstance(value, datetime.date):
+        return f"date:{value.isoformat()}"
     return str(value)
 
 

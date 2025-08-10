@@ -12,6 +12,7 @@ from pyrql import unparse
 IMPLICIT_TYPES = [
     ("123abc", "123abc"),
     (123, "123"),
+    (-123, "-123"),
     (123.456, "123.456"),
     (True, "true"),
     (None, "null"),
@@ -24,7 +25,7 @@ EXPLICIT_TYPES = [
         "uuid:12345678123412341234123456789abc",
     ),
     (date(2020, 11, 21), "date:2020-11-21"),
-    (datetime(2020, 11, 21, 10, 0, 0), "datetime:2020-11-21T10:00:00"),
+    (datetime(2020, 11, 21, 10, 0, 0), "datetime:2020-11-21T10:00:00"),  # noqa: DTZ001
     (
         datetime(2020, 11, 21, 10, 0, 0, tzinfo=timezone.utc),
         "datetime:2020-11-21T10:00:00+00:00",
@@ -35,10 +36,10 @@ EXPLICIT_TYPES = [
 @pytest.mark.parametrize("func", ["eq", "lt", "le", "gt", "ge", "ne"])
 def test_cmp_functions(func):
     parsed = {"name": func, "args": ["a", 1]}
-    assert unparse(parsed) == "%s(a,1)" % func
+    assert unparse(parsed) == f"{func}(a,1)"
 
     parsed = {"name": func, "args": [("a", "b", "c"), 1]}
-    assert unparse(parsed) == "%s((a,b,c),1)" % func
+    assert unparse(parsed) == f"{func}((a,b,c),1)"
 
 
 def test_array_arg():
@@ -49,33 +50,33 @@ def test_array_arg():
     assert unparse(parsed) == "eq((a,b,c),(1,2,3))"
 
 
-@pytest.mark.parametrize("in_,out", IMPLICIT_TYPES)
+@pytest.mark.parametrize(("in_", "out"), IMPLICIT_TYPES)
 def test_implicit_types(in_, out):
     parsed = {"name": "eq", "args": ["a", in_]}
-    assert unparse(parsed) == "eq(a,%s)" % out
+    assert unparse(parsed) == f"eq(a,{out})"
 
 
-@pytest.mark.parametrize("in_,out", IMPLICIT_TYPES)
+@pytest.mark.parametrize(("in_", "out"), IMPLICIT_TYPES)
 def test_implicit_types_symmetry(in_, out):
     parsed = {"name": "eq", "args": ["a", in_]}
     upd = unparse(parsed)
     pd = parse(upd)
 
     assert pd == parsed
-    assert upd == "eq(a,%s)" % out
+    assert upd == f"eq(a,{out})"
 
 
-@pytest.mark.parametrize("in_,out", EXPLICIT_TYPES)
+@pytest.mark.parametrize(("in_", "out"), EXPLICIT_TYPES)
 def test_explicit_types(in_, out):
     parsed = {"name": "eq", "args": ["a", in_]}
-    assert unparse(parsed) == "eq(a,%s)" % out
+    assert unparse(parsed) == f"eq(a,{out})"
 
 
-@pytest.mark.parametrize("in_,out", EXPLICIT_TYPES)
+@pytest.mark.parametrize(("in_", "out"), EXPLICIT_TYPES)
 def test_explicit_types_symmetry(in_, out):
     parsed = {"name": "eq", "args": ["a", in_]}
     upd = unparse(parsed)
     pd = parse(upd)
 
     assert pd == parsed
-    assert upd == "eq(a,%s)" % out
+    assert upd == f"eq(a,{out})"

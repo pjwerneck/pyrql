@@ -107,3 +107,6 @@ ENV/
 
 .vscode
 .sourcery.yaml
+
+# profiling
+prof/*

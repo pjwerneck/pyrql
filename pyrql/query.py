@@ -6,15 +6,17 @@ from collections.abc import Sequence
 from copy import copy
 from copy import deepcopy
 from typing import Any
+from typing import ClassVar
 from typing import Optional
+from typing import Union
 from urllib.parse import unquote
 
-from .exceptions import RQLQueryError
-from .parser import Parser
+from pyrql.exceptions import RQLQueryError
+from pyrql.parser import Parser
 
 
 class NodeMeta(type):
-    nodes = {}
+    nodes: ClassVar[dict] = {}
 
     def __init__(cls, name, *args, **kwargs):
         super().__init__(name, *args, **kwargs)
@@ -38,7 +40,7 @@ class Node(metaclass=NodeMeta):
 
 
 class RowNode(Node):
-    def feed(self, data):
+    def feed(self, data) -> Union[Sequence, Mapping]:
         return [row for row in data if self(row)]
 
 
@@ -66,8 +68,7 @@ class Key(Node):
     def feed(self, data):
         if isinstance(data, Sequence):
             return [self.feed(row) for row in data]
-        else:
-            return self(data)
+        return self(data)
 
 
 class _Filter(RowNode):
@@ -183,8 +184,7 @@ class Select(RowNode):
     def feed(self, data):
         if isinstance(data, Mapping):
             return self(data)
-        else:
-            return [self.feed(row) for row in data]
+        return [self.feed(row) for row in data]
 
 
 class Values(DataNode):
@@ -207,11 +207,10 @@ class Aggregate(DataNode):
         for row in data:
             groups[self.key(row)].append(row)
 
-        data = [
+        return [
             {str(self.key): value, **{str(aggr): aggr(rows) for aggr in self.aggrs}}
             for (value, rows) in groups.items()
         ]
-        return data
 
 
 class Unwind(DataNode):
@@ -221,8 +220,7 @@ class Unwind(DataNode):
         self.key = Key(args[0])
 
     def __call__(self, data):
-        data = [{**row, str(self.key): item} for row in data for item in self.key(row)]
-        return data
+        return [{**row, str(self.key): item} for row in data for item in self.key(row)]
 
 
 class Limit(DataNode):
@@ -350,15 +348,13 @@ class Query:
         data = deepcopy(self.data)
 
         # execute the pipeline
-        for node in self.pipeline:
-            try:
+        try:
+            for node in self.pipeline:
                 data = node.feed(data)
-            except RQLQueryError:
-                raise
-            except Exception as exc:
-                raise RQLQueryError(
-                    f"{exc.__class__.__name__} executing node {node}: {exc}"
-                ) from exc
+        except RQLQueryError:
+            raise
+        except Exception as exc:
+            raise RQLQueryError(f"{exc.__class__.__name__} executing node {node}: {exc}") from exc  # pyright: ignore[reportPossiblyUnboundVariable]
 
         # if there's a default limit and no limit clause was added,
         # add one and feed the data through it

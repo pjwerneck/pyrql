@@ -167,7 +167,7 @@ class TestParser:
         assert exc.value.args[2] == "Expected ')'"
 
     @pytest.mark.parametrize(
-        "expr,error",
+        ("expr", "error"),
         [
             ("(state=Florida|state=Alabama))&gender=female", "Expected end of text"),
             ("()state=Florida|state=Alabama)&gender=female", "Expected '('"),

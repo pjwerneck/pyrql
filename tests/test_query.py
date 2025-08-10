@@ -1,8 +1,8 @@
 import datetime
 import json
 import operator
-import os
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -10,9 +10,16 @@ from pyrql import Query
 from pyrql import RQLQueryError
 
 
+def fzip(*args, strict=False):
+    """Python 3.10+ zip with strict=True"""
+    if strict and any(len(arg) != len(args[0]) for arg in args):
+        raise ValueError("All iterables must have the same length")
+    return zip(*args)
+
+
 @pytest.fixture(scope="session")
 def data():
-    with open(os.path.join(os.path.dirname(__file__), "testdata.json")) as f:
+    with (Path(__file__).parent / "testdata.json").open() as f:
         data_ = json.load(f)
 
     for row in data_:
@@ -22,7 +29,11 @@ def data():
         row["registered"] = datetime.datetime.strptime(
             row["registered"][::-1].replace(":", "", 1)[::-1], "%Y-%m-%dT%H:%M:%S %z"
         )
-        row["birthdate"] = datetime.datetime.strptime(row["birthdate"], "%Y-%m-%d").date()
+        row["birthdate"] = (
+            datetime.datetime.strptime(row["birthdate"], "%Y-%m-%d")
+            .replace(tzinfo=datetime.timezone.utc)
+            .date()
+        )
 
         # convert coordinates to a nested dict, for nested attribute operations
         row["position"] = {
@@ -56,7 +67,7 @@ class TestQuery:
     @pytest.mark.parametrize("val", [1, 10, 50, 100])
     def test_simple_cmp(self, data, op, val):
         opc = getattr(operator, op)
-        rep = Query(data).query("{}(index,{})".format(op, val)).all()
+        rep = Query(data).query(f"{op}(index,{val})").all()
         exp = [row for row in data if opc(row["index"], val)]
         assert exp == rep
 
@@ -111,13 +122,13 @@ class TestQuery:
 
     @pytest.mark.parametrize("key", ["balance", "state"])
     def test_simple_sort(self, data, key):
-        rep = Query(data).query("sort({})".format(key)).all()
+        rep = Query(data).query(f"sort({key})").all()
 
         assert rep == sorted(data, key=operator.itemgetter(key))
 
     @pytest.mark.parametrize("key", ["balance", "state"])
     def test_reverse_sort(self, data, key):
-        rep = Query(data).query("sort(-{})".format(key)).all()
+        rep = Query(data).query(f"sort(-{key})").all()
 
         assert rep == sorted(data, key=operator.itemgetter(key), reverse=True)
 
@@ -128,7 +139,7 @@ class TestQuery:
 
     @pytest.mark.parametrize("limit", [10, 20, 30])
     def test_simple_limit(self, data, limit):
-        rep = Query(data).query("limit({})".format(limit)).all()
+        rep = Query(data).query(f"limit({limit})").all()
         assert rep == data[:limit]
 
     def test_default_limit(self, data):
@@ -142,12 +153,12 @@ class TestQuery:
     @pytest.mark.parametrize("limit", [10, 20, 30])
     @pytest.mark.parametrize("offset", [20, 40, 60])
     def test_limit_offset(self, data, limit, offset):
-        rep = Query(data).query("limit({},{})".format(limit, offset)).all()
+        rep = Query(data).query(f"limit({limit},{offset})").all()
         assert rep == data[offset:][:limit]
 
     @pytest.mark.parametrize("offset", [20, 40, 60])
     def test_offset_only(self, data, offset):
-        rep = Query(data).query("limit(null,{})".format(offset)).all()
+        rep = Query(data).query(f"limit(null,{offset})").all()
         assert rep == data[offset:]
 
     def test_out(self, data):
@@ -278,7 +289,10 @@ class TestQuery:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
 
-        exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
+        exp = [
+            {"state": state, "balance": balance}
+            for (state, balance) in fzip(states, balances, strict=False)
+        ]
 
         assert res == exp
 
@@ -300,7 +314,10 @@ class TestQuery:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
 
-        exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
+        exp = [
+            {"state": state, "balance": balance}
+            for (state, balance) in fzip(states, balances, strict=False)
+        ]
 
         assert res == exp
 
@@ -322,7 +339,10 @@ class TestQuery:
                 i = states.index(row["state"])
                 balances[i] += row["balance"]
 
-        exp = [{"state": state, "balance": balance} for (state, balance) in zip(states, balances)]
+        exp = [
+            {"state": state, "balance": balance}
+            for (state, balance) in fzip(states, balances, strict=False)
+        ]
         exp.sort(key=operator.itemgetter("balance"))
 
         assert res == exp
@@ -374,8 +394,8 @@ class TestQuery:
                 "position.longitude": longitude,
                 "count": count,
             }
-            for (state, balance, latitude, longitude, count) in zip(
-                states, balances, latitudes, longitudes, counts
+            for (state, balance, latitude, longitude, count) in fzip(
+                states, balances, latitudes, longitudes, counts, strict=False
             )
         ]
         exp.sort(key=operator.itemgetter("balance"))
@@ -397,7 +417,7 @@ class TestQuery:
 
     def test_unwind_with_value_array_and_distinct_values(self, data):
         res = Query(data).query("unwind(tags)&values(tags)&distinct()&sort()").all()
-        exp = sorted(list({tag for row in data for tag in row["tags"]}))
+        exp = sorted({tag for row in data for tag in row["tags"]})
         assert res == exp
 
     def test_index_and_key(self, data):

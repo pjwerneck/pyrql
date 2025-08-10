@@ -4,7 +4,7 @@ version = "0.7.11"
 description = "RQL parsing"
 readme = "README.md"
 authors = [{ name = "Pedro Werneck", email = "pjwerneck@gmail.com" }]
-requires-python = "~=3.8"
+requires-python = ">=3.8.0"
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
@@ -32,6 +32,7 @@ dev = [
     "hypothesis>=6.92.1,<7",
     "pytest-profiling>=1.8.1",
     "ruff>=0.9.5",
+    "pytest-coverage>=0.0",
 ]
 
 [build-system]
@@ -41,7 +42,62 @@ build-backend = "hatchling.build"
 [tool.ruff]
 exclude = [".git", ".venv"]
 line-length = 99
-target-version = "py312"
+target-version = "py38"
+preview = false
+
+[tool.ruff.lint]
+select = [
+    "A",
+    "ASYNC",
+    "B",
+    "BLE",
+    "C4",
+    "C90",
+    "DTZ",
+    "E",
+    "F",
+    "FURB",
+    "G",
+    "I",
+    "ICN",
+    "INT",
+    "ISC",
+    "LOG",
+    "N",
+    "NPY",
+    "PD",
+    "PERF",
+    "PGH",
+    "PIE",
+    "PL",
+    "PT",
+    "PTH",
+    "Q",
+    "RET",
+    "RSE",
+    "RUF",
+    "S",
+    "SIM",
+    "SLOT",
+    "T20",
+    "TC",
+    "TD",
+    "TID",
+    "TRY",
+    "UP",
+    "W",
+]
+
+ignore = [
+  "TRY003",
+  "UP007",
+  "PLR2004",
+  "S101",
+
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
 
 [tool.ruff.format]
 docstring-code-format = true

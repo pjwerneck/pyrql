@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime  # noqa: A005
 from datetime import timezone
 from decimal import Decimal
 from typing import Any
@@ -9,7 +9,7 @@ import pyparsing as pp
 from dateutil.parser import parse as dateparse
 from pyparsing import pyparsing_common as common
 
-from .exceptions import RQLSyntaxError
+from pyrql.exceptions import RQLSyntaxError
 
 # autoconvert:
 # numbers
@@ -28,7 +28,7 @@ from .exceptions import RQLSyntaxError
 
 
 # a custom datetime class to handle epoch timestamps and allow reversability
-class epoch_datetime(datetime):
+class epoch_datetime(datetime):  # noqa: N801
     pass
 
 
@@ -89,9 +89,9 @@ def _uuid(expr, loc, toks):
     return UUID(hex=toks[0])
 
 
-TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))  # type: ignore
-FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))  # type: ignore
-NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))  # type: ignore
+TRUE = pp.Keyword("true").setParseAction(pp.replaceWith(True))  # pyright: ignore[reportCallIssue]
+FALSE = pp.Keyword("false").setParseAction(pp.replaceWith(False))  # pyright: ignore[reportCallIssue]
+NULL = pp.Keyword("null").setParseAction(pp.replaceWith(None))  # pyright: ignore[reportCallIssue]
 
 # let's treat sort as a keyword to better handle the +- prefix syntax
 SORT = pp.Keyword("sort").suppress()

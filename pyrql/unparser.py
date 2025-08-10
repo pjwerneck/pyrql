@@ -2,7 +2,7 @@ import datetime
 import decimal
 import uuid
 
-from .parser import epoch_datetime
+from pyrql.parser import epoch_datetime
 
 
 class Unparser:
@@ -41,31 +41,31 @@ class Unparser:
 
         return prefix + "(" + ",".join(tokens) + ")"
 
-    def unparse_token(self, arg):
+    def unparse_token(self, arg):  # noqa: PLR0911
         if arg is None:
             return "null"
 
-        elif isinstance(arg, bool):
+        if isinstance(arg, bool):
             return str(arg).lower()
 
-        elif isinstance(arg, decimal.Decimal):
-            return "decimal:%s" % arg
+        if isinstance(arg, decimal.Decimal):
+            return f"decimal:{arg}"
 
-        elif isinstance(arg, float):
+        if isinstance(arg, float):
             # repr(float) returns the shortest decimal representation
             # for the same binary float
             return repr(arg)
 
-        elif isinstance(arg, uuid.UUID):
-            return "uuid:%s" % arg.hex
+        if isinstance(arg, uuid.UUID):
+            return f"uuid:{arg.hex}"
 
-        elif isinstance(arg, epoch_datetime):
-            return "epoch:%s" % arg.timestamp()
+        if isinstance(arg, epoch_datetime):
+            return f"epoch:{arg.timestamp()}"
 
-        elif isinstance(arg, datetime.datetime):
-            return "datetime:%s" % arg.isoformat()
+        if isinstance(arg, datetime.datetime):
+            return f"datetime:{arg.isoformat()}"
 
-        elif isinstance(arg, datetime.date):
-            return "date:%s" % arg.isoformat()
+        if isinstance(arg, datetime.date):
+            return f"date:{arg.isoformat()}"
 
         return str(arg)
