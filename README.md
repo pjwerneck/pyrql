@@ -9,6 +9,7 @@
 - [pyrql](#pyrql)
   - [Table of Contents](#table-of-contents)
   - [Overview](#overview)
+  - [Stability](#stability)
   - [Installation](#installation)
   - [Documentation](#documentation)
     - [RQL Syntax](#rql-syntax)
@@ -26,6 +27,10 @@ Resource Query Language (RQL) is a query language designed for use in URIs, with
 This library provides:
 - A Python parser that produces output identical to the [JavaScript Library](https://github.com/persvr/rql)
 - A query engine that can perform RQL queries on lists of dictionaries
+
+## Stability
+
+This library follows semantic versioning. Version 0.8.0 marks the stable public API, which includes the `parse()`, `unparse()`, `Query` class, and exception classes. Future releases will maintain backward compatibility within major versions.
 
 ## Installation
 
@@ -244,15 +249,15 @@ GET /api/v1/tasks?eq(state,COMPLETED)&ne(assigned_user,null)&aggregate(assigned_
 | `excludes(key,value)`                | `[row for row in data if value not in row[key]]`            |                                        |
 | `and(expr1,expr2,...)`               | `[row for row in data if expr1 and expr2]`                  |                                        |
 | `or(expr1,expr2,...)`                | `[row for row in data if expr1 or expr2]`                   |                                        |
-| TRANSFORMING                         |                                                             |                                        |
+| TRANSFORMING                         |                                                             | All operators return lists.            |
 | `select(a,b,c,...)`                  | `[{a: row[a], b: row[b], c: row[c]} for row in data]`       |                                        |
 | `values(a)`                          | `[row[a] for row in data]`                                  |                                        |
-| `limit(count,start?)`                | `data[start:count]`                                         |                                        |
+| `limit(count,start?)`                | `data[start:start+count]`                                   |                                        |
 | `sort(key)`                          | `sorted(data, key=lambda row: row[key])`                    |                                        |
 | `sort(-key)`                         | `sorted(data, key=lambda row: row[key], reverse=True)`      |                                        |
-| `distinct()`                         | `list(set(data))`                                           | Unlike `set`, RQL preserves order.     |
-| `first()`                            | `data[0]`                                                   |                                        |
-| `one()`                              | `data[0]`                                                   | Raises RQLQueryError if len(data) != 1 |
+| `distinct()`                         | `list(dict.fromkeys(data))`                                 | Preserves order.                       |
+| `first()`                            | `data[:1]`                                                  |                                        |
+| `one()`                              | `data`                                                      | Raises RQLQueryError if len(data) != 1 |
 | `aggregate(key,agg1(a),agg2(b),...)` | See below                                                   |                                        |
 | `unwind(key)`                        | `[{**row, key: item} for row in data for item in row[key]]` |                                        |
 | AGGREGATION                          |                                                             |                                        |

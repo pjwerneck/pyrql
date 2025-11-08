@@ -1,3 +1,4 @@
+import collections.abc
 import operator
 import statistics
 from collections import defaultdict
@@ -13,6 +14,10 @@ from urllib.parse import unquote
 
 from pyrql.exceptions import RQLQueryError
 from pyrql.parser import Parser
+
+
+def is_hashable(obj):
+    return isinstance(obj, collections.abc.Hashable)
 
 
 class NodeMeta(type):
@@ -204,11 +209,13 @@ class Aggregate(DataNode):
 
     def __call__(self, data):
         groups = defaultdict(list, {})
+        key_func = self.key  # local binding for performance
         for row in data:
-            groups[self.key(row)].append(row)
+            groups[key_func(row)].append(row)
 
+        aggrs = self.aggrs  # local binding for performance
         return [
-            {str(self.key): value, **{str(aggr): aggr(rows) for aggr in self.aggrs}}
+            {str(key_func): value, **{str(aggr): aggr(rows) for aggr in aggrs}}
             for (value, rows) in groups.items()
         ]
 
@@ -262,10 +269,17 @@ class Count(DataNode):
 class Distinct(DataNode):
     def __call__(self, data):
         new_data = []
+        seen = set()
 
         for row in data:
-            if row not in new_data:
+            if is_hashable(row):
+                if row not in seen:
+                    seen.add(row)
+                    new_data.append(row)
+            # fallback for unhashable types
+            elif row not in new_data:
                 new_data.append(row)
+
         return new_data
 
 

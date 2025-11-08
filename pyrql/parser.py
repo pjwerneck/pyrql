@@ -1,4 +1,4 @@
-from datetime import datetime  # noqa: A005
+from datetime import datetime
 from datetime import timezone
 from decimal import Decimal
 from typing import Any
@@ -34,6 +34,10 @@ class epoch_datetime(datetime):  # noqa: N801
 
 def _sort_call(expr, loc, toks):
     return {"name": "sort", "args": toks.args.asList()}
+
+
+def _sort_arg(expr, loc, toks):
+    return tuple(toks)
 
 
 def _array(expr, loc, toks):
@@ -123,7 +127,6 @@ RESERVED = pp.Word("@!*+$", exact=1)
 
 UNRESERVED = pp.Word(f"{pp.pyparsing_unicode.alphanums}-:._~ ", exact=1)
 PCT_ENCODED = pp.Regex(r"%[0-9a-fA-F]{2}").setParseAction(_unquote)
-NCHAR = pp.MatchFirst([UNRESERVED, PCT_ENCODED, RESERVED])
 NCHAR = UNRESERVED | PCT_ENCODED | RESERVED
 
 STRING = pp.Combine(pp.OneOrMore(NCHAR))
@@ -166,7 +169,7 @@ CALL_OPERATOR = pp.Forward()
 
 ARGUMENT = CALL_OPERATOR | VALUE
 
-SORT_ARG = ((MINUS | PLUS) + VALUE).setParseAction(lambda exp, loc, toks: tuple(toks))
+SORT_ARG = ((MINUS | PLUS) + VALUE).setParseAction(_sort_arg)
 SORT_ARGARRAY = pp.delimitedList(SORT_ARG).setResultsName("args")
 SORT_CALL = (SORT + LPAR + SORT_ARGARRAY + RPAR).setParseAction(_sort_call)
 
